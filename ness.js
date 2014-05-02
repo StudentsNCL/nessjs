@@ -5,30 +5,51 @@ var request = require('request'),
 
 var argv = optimist.argv;
 
-request.get('https://ness.ncl.ac.uk', {
-  'auth': {
-    'user': argv.user,
-    'pass': argv.pass,
-    'sendImmediately': false
-  }
-}, function (error, response, body) {
-  if (!error && response.statusCode == 200) {
-    subcommands[argv._[0]](cheerio.load(body));
-  }
-})
-
-subcommands = {
-    modules: function($) {
-        var modules = [];
-        $('#topmenu li').each(function (i, elem) {
-            modules.push({
-                code: $(this).text(),
-                name: $(this).attr('title')
+({ modules: function() {
+        getPage('https://ness.ncl.ac.uk', function($) {
+            var modules = [];
+            $('#topmenu li').each(function () {
+                modules.push({
+                    code: $(this).text(),
+                    name: $(this).attr('title')
+                });
             });
+            console.log(modules);
         });
-        console.log(modules);
+    },
+             
+    attendance: function() {
+        getPage('https://ness.ncl.ac.uk/auth/student/attendance.php', function($) {
+            var modules = [];
+            $('#mainbody tr').each(function () {
+                var moduleLink = $(this).find('th a');
+                var attendance = $(this).find('td');
+                modules.push({
+                    code: moduleLink.text(),
+                    name: moduleLink.attr('title'),
+                    attendance: attendance.text()
+                });
+            });
+            console.log(modules);
+        });
     }
-};
+
+})[argv._[0]]();
+
+function getPage(url, callback) {
+    request.get(url, {
+      'auth': {
+        'user': argv.user,
+        'pass': argv.pass,
+        'sendImmediately': false
+      }
+    }, function (error, response, body) {
+      if (!error && response.statusCode == 200) {
+      console.log(body);
+        callback(cheerio.load(body));
+      }
+    })
+}
 
 
 
