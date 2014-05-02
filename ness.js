@@ -22,13 +22,31 @@ var argv = optimist.argv;
         getPage('https://ness.ncl.ac.uk/auth/student/attendance.php', function($) {
             var modules = [];
             $('#mainbody tr').each(function () {
+
                 var moduleLink = $(this).find('th a');
-                var attendance = $(this).find('td');
-                modules.push({
+                var attendanceDesc = $(this).find('td').text();
+
+                var module = {
                     code: moduleLink.text(),
                     name: moduleLink.attr('title'),
-                    attendance: attendance.text()
-                });
+                    numLecturesTotal: "N/A",
+                    numLecturesAttended: "N/A",
+                    attendance: "N/A"
+                };
+
+                if(attendanceDesc != "No Attendance Records")
+                {
+                    module.numLecturesTotal = parseInt(attendanceDesc
+                        .split('(')[1] .split('/')[1]);
+
+                    module.numLecturesAttended = parseInt(attendanceDesc
+                        .split('(')[1] .split('/')[0]);
+
+                    module.attendance = parseInt(attendanceDesc.split('%')[0]);
+                }
+
+                modules.push(module);
+
             });
             console.log(modules);
         });
@@ -45,7 +63,6 @@ function getPage(url, callback) {
       }
     }, function (error, response, body) {
       if (!error && response.statusCode == 200) {
-      console.log(body);
         callback(cheerio.load(body));
       }
     })
