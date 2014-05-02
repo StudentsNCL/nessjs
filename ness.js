@@ -7,6 +7,7 @@ var argv = optimist.argv;
 
 var functions = {
     modules: function() {
+
         getPage('https://ness.ncl.ac.uk', function($) {
             var modules = [];
             $('#topmenu li').each(function () {
@@ -54,6 +55,15 @@ var functions = {
     }
 
 };
+
+if(argv.help || !(argv.user && argv.pass)) {
+    console.log('Usage: node ness.js --user b20XXXXXX --pass your_pass OPTION');
+    console.log('Command-line interface for NESS');
+    console.log('\nOPTION:');
+    for (var f in functions)
+        console.log('  ' + f);
+    return;
+}
 
 functions[argv._[0]]();
 
