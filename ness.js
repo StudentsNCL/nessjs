@@ -5,7 +5,8 @@ var request = require('request'),
 
 var argv = optimist.argv;
 
-({ modules: function() {
+var functions = {
+    modules: function() {
         getPage('https://ness.ncl.ac.uk', function($) {
             var modules = [];
             $('#topmenu li').each(function () {
@@ -52,7 +53,9 @@ var argv = optimist.argv;
         });
     }
 
-})[argv._[0]]();
+};
+
+functions[argv._[0]]();
 
 function getPage(url, callback) {
     request.get(url, {
