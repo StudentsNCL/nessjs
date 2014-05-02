@@ -52,8 +52,30 @@ var functions = {
             });
             console.log(modules);
         });
+    },
+    assessment: function() {
+        getPage('https://ness.ncl.ac.uk/student/summary/index.php', function($) {
+            var modules = [];
+            var offset = 1;
+            $('tbody tr').each(function () {
+                $td = $(this).find('td');
+                var module = {
+                    stage: parseInt($($td[0 + offset]).text().trim()),
+                    year: $($td[1 + offset]).text().trim(),
+                    credits: $($td[2 + offset]).text().trim(),
+                    mark: $($td[3 + offset]).text().trim(),
+                    decision: $($td[4 + offset]).text().trim()
+                };
+                if(module.credits != 'TBR') {
+                    module.credits = parseInt(module.credits.substr(1));
+                    module.mark = parseFloat(module.mark);
+                }
+                modules.push(module);
+                offset = 0;
+            });
+            console.log(modules);
+        });
     }
-
 };
 
 if(argv.help || !(argv.user && argv.pass)) {
