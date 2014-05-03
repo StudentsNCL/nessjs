@@ -6,7 +6,8 @@
   "dependencies": {
     "optimist": "~0.6.1",
     "request": "~2.34.0",
-    "cheerio": "^0.15.0"
+    "cheerio": "^0.15.0",
+    "prettyjson": "^1.0.0"
   },
   "devDependencies": {},
   "scripts": {

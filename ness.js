@@ -1,7 +1,8 @@
 
 var request = require('request'),
     optimist = require('optimist'),
-    cheerio = require('cheerio');
+    cheerio = require('cheerio'),
+    prettyjson = require('prettyjson');
 
 var argv = optimist.argv;
 
@@ -16,7 +17,7 @@ var functions = {
                     name: $(this).attr('title')
                 });
             });
-            console.log(modules);
+            console.log(prettyjson.render(modules));
         });
     },
              
@@ -47,7 +48,7 @@ var functions = {
                 modules.push(module);
 
             });
-            console.log(modules);
+            console.log(prettyjson.render(modules));
         });
     },
     assessment: function() {
@@ -70,7 +71,7 @@ var functions = {
                 modules.push(module);
                 offset = 0;
             });
-            console.log(modules);
+            console.log(prettyjson.render(modules));
         });
     }
 };
