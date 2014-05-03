@@ -3,6 +3,8 @@ var request = require('request'),
     optimist = require('optimist'),
     cheerio = require('cheerio'),
     prettyjson = require('prettyjson'),
+    stringify = require('json-stringify-safe'),
+    moment = require('moment'),
     errors = require('./errors');
 
 function handleError(error, description, code) {
@@ -45,8 +47,7 @@ var functions = {
                     name: moduleLink.attr('title')
                 };
 
-                if(attendanceDesc != "No Attendance Records")
-                {
+                if(attendanceDesc != "No Attendance Records") {
                     module.numLecturesTotal = parseInt(attendanceDesc
                         .split('(')[1] .split('/')[1]);
 
@@ -66,7 +67,7 @@ var functions = {
         getPage('https://ness.ncl.ac.uk/student/summary/index.php', function($) {
             var modules = [];
             var offset = 1;
-            $('tbody tr').each(function () {
+            $('#mainbody tbody tr').each(function () {
                 $td = $(this).find('td');
                 var module = {
                     stage: parseInt($($td[0 + offset]).text().trim()),
@@ -83,6 +84,52 @@ var functions = {
                 offset = 0;
             });
             printJson(modules);
+        });
+    },
+    coursework: function() {
+        getPage('https://ness.ncl.ac.uk/php/summary.php', function($) {
+            var modules = [];
+            var module;
+
+            $('#mainbody dl').first().children().each(function(i) {
+                var $this = $(this);
+                if(i % 2 == 0) {
+                    var moduleLink = $this.find('a').first();
+                    module = {
+                        code: moduleLink.attr('title'),
+                        title: moduleLink.text().split(' - ')[1],
+                        coursework: []
+                    }
+                } else {
+                    $this.find('tbody').first().children('tr').each(function() {
+                        var tds = $(this).children('td');
+                        var courseworkLink = $(tds[0]).find('a');
+                        var coursework = {};
+
+                        if(courseworkLink.length > 0)
+                            coursework.url = courseworkLink.attr('href');
+                        else
+                            courseworkLink = $(tds[0]).find('span');
+
+                        coursework.title = courseworkLink.text();
+
+                        if(courseworkLink.attr('title') !== undefined)
+                            coursework.due = moment(courseworkLink.attr('title'), 'HH:mm:ss , D MMM YYYY');
+
+                        module.coursework.push(coursework);
+                    });
+
+
+                    /* var moduleSummary = $(this).find('table:eq(1) tr:first'); */
+                   
+
+                    modules.push(module);
+                }
+            });
+
+            printJson(modules);
+
+
         });
     }
 };
@@ -115,13 +162,15 @@ try{
 }
   
 function getPage(url, callback) {
-    request.get(url, {
-      'auth': {
-        'user': argv.user,
-        'pass': argv.pass,
-        'sendImmediately': false
+    request({
+      uri: url,
+      auth: {
+        user: argv.user,
+        pass: argv.pass,
+        sendImmediately: false
       }
     }, function (error, response, body) {
+        console.log(body);
       if (!error && response.statusCode == 200) {
         callback(cheerio.load(body));
       }
@@ -132,7 +181,7 @@ function getPage(url, callback) {
 }
 
 function printJson(json) {
-    console.log(prettyjson.render(json));
+    console.log(argv.raw ? stringify(json, null, 3) : prettyjson.render(json));
 }
 
 function showHelp() {
