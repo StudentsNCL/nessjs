@@ -9,7 +9,8 @@
     "cheerio": "^0.15.0",
     "prettyjson": "^1.0.0",
     "json-stringify-safe": "^5.0.0",
-    "moment": "^2.6.0"
+    "moment": "^2.6.0",
+    "underscore": "^1.6.0"
   },
   "devDependencies": {},
   "scripts": {

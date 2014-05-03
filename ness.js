@@ -2,7 +2,8 @@
 var request = require('request'),
     cheerio = require('cheerio'),
     moment = require('moment'),
-    errors = require('./errors');
+    errors = require('./errors'),
+    _ = require('underscore');
 
 var user, pass;
 
@@ -121,16 +122,7 @@ exports.getModules = function(detail, callback)
                 var module = cacheModule(moduleLink.text());
                 module.title = moduleLink.attr('title');
 
-                if(attendanceDesc != "No Attendance Records")
-                {
-                    module.numLecturesTotal = parseInt(attendanceDesc
-                        .split('(')[1].split('/')[1]);
-
-                    module.numLecturesAttended = parseInt(attendanceDesc
-                        .split('(')[1].split('/')[0]);
-
-                    module.attendance = parseInt(attendanceDesc.split('%')[0]);
-                }
+                _.extend(module, parseAttendance(attendanceDesc));
             });
 
             cacheDetail.title = true;
@@ -247,15 +239,15 @@ exports.getStages = function(callback)
 
                     var module = cacheModule($($td[0]).text().trim());
 
-                    cacheDetail.attendance = true;
-
                     module.credits = parseInt($($td[1]).text().trim());
                     module.year = $($td[2]).text().trim();
                     module.attempt = $($td[3]).text().trim();
                     module.attemptMark = $($td[4]).text().trim();
                     module.finalMark = $($td[5]).text().trim();
                     module.decision = $($td[6]).text().trim();
-                    module.attendance = $($td[7]).text().trim();
+
+                    _.extend(module, parseAttendance($($td[7]).text().trim()));
+                    cacheDetail.attendance = true;
 
                     stage.modules.push(module);
                 });
@@ -286,5 +278,18 @@ function getPage(url, callback)
             callback(error, null);
     });
 }
+
+function parseAttendance(attendanceDesc)
+{
+    if(attendanceDesc == "No Attendance Records" || attendanceDesc == "---")
+        return {};
+
+    return {
+        numLecturesTotal: parseInt(attendanceDesc.split('(')[1].split('/')[1]),
+        numLecturesAttended: parseInt(attendanceDesc.split('(')[1].split('/')[0]),
+        attendance: parseInt(attendanceDesc.split('%')[0])
+    };
+}
+
 
 
