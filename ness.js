@@ -5,15 +5,15 @@ var request = require('request'),
     prettyjson = require('prettyjson'),
     errors = require('./errors');
 
-function errorHandler(error, description, code) {
+function handleError(error, description, code) {
     printJson({
-            error: {
-                code: code || 500,
-                error: error || errors[code] || 'error_generic',
-                error_description: description
-            }
-        });
-        return;
+        error: {
+            code: code || 500,
+            error: error || errors[code] || 'errorGeneric',
+            errorDescription: description
+        }
+    });
+    return;
 }
 
 var argv = optimist.argv;
@@ -87,33 +87,28 @@ var functions = {
     }
 };
 
-if(argv.help) {
+if(argv.help || argv._[0] === undefined) {
     showHelp();
     return;
 }
-if(!argv.user) {
-    errorHandler("no_user", "Username required to login");
-    return;
-}
-if(!argv.pass) {
-    errorHandler("no_pass", "Password required to login");
-    return;
-}
-if(argv._[0]){
 
-try{
-    functions[argv._[0]]();
-} catch(err){
+if(argv.user === undefined) {
+    handleError("noUser", "Username required to login");
+    return;
+}
+
+if(argv.pass === undefined) {
+    handleError("noPass", "Password required to login");
+    return;
+}
+
+if(functions[argv._[0]] === undefined) {
     console.log("ness: '" + argv._[0] + "' is not a ness command. See 'ness --help'.");
     return;
 }
-  
-}
-else {
-    showHelp();
-    return;
-}
 
+functions[argv._[0]]();
+  
 function getPage(url, callback) {
     request.get(url, {
       'auth': {
@@ -126,7 +121,7 @@ function getPage(url, callback) {
         callback(cheerio.load(body));
       }
       else {
-        errorHandler(null, "Unable to connect to NESS", response.statusCode);
+        handleError(null, "Unable to connect to NESS", response.statusCode);
       }
     });
 }
