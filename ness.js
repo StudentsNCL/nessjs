@@ -114,7 +114,7 @@ var functions = {
                         coursework.title = courseworkLink.text();
 
                         if(courseworkLink.attr('title') !== undefined)
-                            coursework.due = moment(courseworkLink.attr('title'), 'HH:mm:ss , D MMM YYYY');
+                            coursework.due = moment(courseworkLink.attr('title'), 'HH:mm:ss , D MMM YYYY').format()
 
                         module.coursework.push(coursework);
                     });
