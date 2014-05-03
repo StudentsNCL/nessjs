@@ -1,4 +1,4 @@
-Command-line interface for NESS
+Command-line interface for NESS 
 
 Installation
 ------------
@@ -6,9 +6,10 @@ Installation
     npm install
 
 
-Usage
------
+Usage (CLI example)
+-------------------
 
+    node main.js --user b20XXXXXX --pass YOUR_PASS name
     node main.js --user b20XXXXXX --pass YOUR_PASS modules
     node main.js --user b20XXXXXX --pass YOUR_PASS attendance
     node main.js --user b20XXXXXX --pass YOUR_PASS stages

@@ -6,6 +6,11 @@ var ness = require('./ness'),
 var argv = optimist.argv;
 
 var functions = {
+    name: function() {
+        ness.getName(function(err, name) {
+            err ? printError(err) : console.log(name);
+        });
+    },
     modules: function() {
         ness.getModules([], function(err, modules) {
             err ? printError(err) : printJson(modules);

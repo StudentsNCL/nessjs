@@ -15,6 +15,8 @@ var cacheDetail = {
     coursework: false
 };
 
+var name;
+
 function cacheModule(code)
 {
     return moduleCache[code] || (moduleCache[code] = { code: code });
@@ -271,6 +273,28 @@ exports.getStages = function(callback)
     });
 }
 
+exports.getName = function(callback)
+{
+    if (name !== undefined)
+    {
+        callback(null, name);
+        return;
+    }
+
+    /* Need to grab something to get the name: might as well be the module list
+     */
+    exports.getModules([], function(err, modules)
+    {
+        if (err)
+        {
+            callback(err, null);
+            return;
+        }
+
+        callback(null, name);
+    });
+}
+
 function getPage(url, callback)
 {
     request({
@@ -282,9 +306,18 @@ function getPage(url, callback)
     }, function (error, response, body)
     {
         if (!error && response.statusCode == 200)
-            callback(null, cheerio.load(body));
+        {
+            var $ = cheerio.load(body);
+
+            if (name === undefined)
+                name = $('#uname').text().trim().split(' (')[0];
+
+            callback(null, $);
+        }
         else
+        {
             callback(error, null);
+        }
     });
 }
 
