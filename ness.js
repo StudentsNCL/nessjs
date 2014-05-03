@@ -40,8 +40,17 @@ exports.getModules = function(detail, callback)
 {
     if (!Array.isArray(detail))
         detail = [detail];
+    else
+        detail = detail.slice(0);
 
-    detail.push('code', 'title');
+    detail.push('code');
+    detail.push('title');
+
+    if(detail.indexOf('attendance') !== -1)
+    {
+        detail.push('numLecturesTotal');
+        detail.push('numLecturesAttended');
+    }
 
     var numOperations = 0;
 
@@ -132,8 +141,8 @@ exports.getModules = function(detail, callback)
         });
     }
 
-    /* If none of the other detail is requested, we at least need the list of
-     * modules.
+    /* If none of the other detail is requested, we at least need the module
+     * titles.
      */
     if (numOperations == 0 && !cacheDetail.title)
     {
