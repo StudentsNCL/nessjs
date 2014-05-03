@@ -30,10 +30,7 @@ var functions = {
 
                 var module = {
                     code: moduleLink.text(),
-                    name: moduleLink.attr('title'),
-                    numLecturesTotal: "N/A",
-                    numLecturesAttended: "N/A",
-                    attendance: "N/A"
+                    name: moduleLink.attr('title')
                 };
 
                 if(attendanceDesc != "No Attendance Records")
@@ -62,14 +59,14 @@ var functions = {
                 var module = {
                     stage: parseInt($($td[0 + offset]).text().trim()),
                     year: $($td[1 + offset]).text().trim(),
-                    credits: $($td[2 + offset]).text().trim(),
-                    mark: $($td[3 + offset]).text().trim(),
                     decision: $($td[4 + offset]).text().trim()
                 };
-                if(module.credits != 'TBR') {
-                    module.credits = parseInt(module.credits.substr(1));
-                    module.mark = parseFloat(module.mark);
-                }
+                var credits = $($td[2 + offset]).text().trim();
+                if(credits != 'TBR')
+                    module.credits = parseInt(credits.substr(1));
+                var mark = $($td[3 + offset]).text().trim();
+                if(mark != 'TBR')
+                    module.mark = parseFloat(mark);
                 modules.push(module);
                 offset = 0;
             });
