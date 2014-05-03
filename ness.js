@@ -2,13 +2,24 @@
 var request = require('request'),
     optimist = require('optimist'),
     cheerio = require('cheerio'),
-    prettyjson = require('prettyjson');
+    prettyjson = require('prettyjson'),
+    errors = require('./errors');
+
+function errorHandler(error, description, code) {
+    printJson({
+            error: {
+                code: code || 500,
+                error: error || errors[code] || 'error_generic',
+                error_description: description
+            }
+        });
+        return;
+}
 
 var argv = optimist.argv;
 
 var functions = {
     modules: function() {
-
         getPage('https://ness.ncl.ac.uk', function($) {
             var modules = [];
             $('#topmenu li').each(function () {
@@ -76,16 +87,32 @@ var functions = {
     }
 };
 
-if(argv.help || !(argv.user && argv.pass)) {
-    console.log('Usage: node ness.js --user b20XXXXXX --pass your_pass OPTION');
-    console.log('Command-line interface for NESS');
-    console.log('\nOPTION:');
-    for (var f in functions)
-        console.log('  ' + f);
+if(argv.help) {
+    showHelp();
     return;
 }
+if(!argv.user) {
+    errorHandler("no_user", "Username required to login");
+    return;
+}
+if(!argv.pass) {
+    errorHandler("no_pass", "Password required to login");
+    return;
+}
+if(argv._[0]){
 
-functions[argv._[0]]();
+try{
+    functions[argv._[0]]();
+} catch(err){
+    console.log("ness: '" + argv._[0] + "' is not a ness command. See 'ness --help'.");
+    return;
+}
+  
+}
+else {
+    showHelp();
+    return;
+}
 
 function getPage(url, callback) {
     request.get(url, {
@@ -98,12 +125,24 @@ function getPage(url, callback) {
       if (!error && response.statusCode == 200) {
         callback(cheerio.load(body));
       }
-    })
+      else {
+        errorHandler(null, "Unable to connect to NESS", response.statusCode);
+      }
+    });
 }
 
 function printJson(json) {
     console.log(prettyjson.render(json));
 }
+
+function showHelp() {
+    console.log('Usage: node ness --user b20XXXXXX --pass your_pass <OPTION>');
+    console.log('Command-line interface for NESS');
+    console.log('\nOPTION:');
+    for (var f in functions)
+        console.log('  ' + f);
+}
+
 
 
 
