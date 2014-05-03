@@ -17,7 +17,7 @@ var functions = {
                     name: $(this).attr('title')
                 });
             });
-            console.log(prettyjson.render(modules));
+            printJson(modules);
         });
     },
              
@@ -48,7 +48,7 @@ var functions = {
                 modules.push(module);
 
             });
-            console.log(prettyjson.render(modules));
+            printJson(modules);
         });
     },
     assessment: function() {
@@ -71,7 +71,7 @@ var functions = {
                 modules.push(module);
                 offset = 0;
             });
-            console.log(prettyjson.render(modules));
+            printJson(modules);
         });
     }
 };
@@ -99,6 +99,10 @@ function getPage(url, callback) {
         callback(cheerio.load(body));
       }
     })
+}
+
+function printJson(json) {
+    console.log(prettyjson.render(json));
 }
 
 
