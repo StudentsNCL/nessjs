@@ -247,7 +247,6 @@ exports.getStages = function(callback)
 
                     var module = cacheModule($($td[0]).text().trim());
 
-                    cacheDetail.title = true;
                     cacheDetail.attendance = true;
 
                     module.credits = parseInt($($td[1]).text().trim());
