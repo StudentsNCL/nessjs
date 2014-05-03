@@ -191,6 +191,9 @@ exports.getModules = function(detail, callback)
         
         callback(null, modules);
     }
+
+    if (numOperations == 0)
+        operationComplete();
 }
 
 exports.getStages = function(callback)
