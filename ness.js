@@ -65,25 +65,46 @@ var functions = {
     },
     assessment: function() {
         getPage('https://ness.ncl.ac.uk/student/summary/index.php', function($) {
-            var modules = [];
+            var stages = [];
             var offset = 1;
             $('#mainbody tbody tr').each(function () {
                 $td = $(this).find('td');
-                var module = {
+                var stage = {
                     stage: parseInt($($td[0 + offset]).text().trim()),
                     year: $($td[1 + offset]).text().trim(),
-                    decision: $($td[4 + offset]).text().trim()
+                    decision: $($td[4 + offset]).text().trim(),
+                    modules: []
                 };
                 var credits = $($td[2 + offset]).text().trim();
                 if(credits != 'TBR')
-                    module.credits = parseInt(credits.substr(1));
+                    stage.credits = parseInt(credits.substr(1));
                 var mark = $($td[3 + offset]).text().trim();
                 if(mark != 'TBR')
-                    module.mark = parseFloat(mark);
-                modules.push(module);
+                    stage.mark = parseFloat(mark);
+                
+                getPage('https://ness.ncl.ac.uk/student/summary/stageSummary.php?&reportyear=' + stage.year + '&reportstage=' + stage.stage, function($) {
+                    var modules = [];
+                    $('#mainbody tbody tr').each(function () {
+                        $td = $(this).find('td');
+                        var module = {
+                            module: $($td[0]).text().trim(),
+                            credits: parseInt($($td[1]).text().trim()),
+                            year: $($td[2]).text().trim(),
+                            attempt: $($td[3]).text().trim(),
+                            attemptMark: $($td[4]).text().trim(),
+                            finalMark: $($td[5]).text().trim(),
+                            decision: $($td[6]).text().trim(),
+                            attendance: $($td[7]).text().trim(),
+                        }
+                        stage.modules.push(module);
+                    });
+                    
+                    stages.push(stage);
+                    printJson(stages);
+                });
+                
                 offset = 0;
             });
-            printJson(modules);
         });
     },
     coursework: function() {
@@ -170,7 +191,6 @@ function getPage(url, callback) {
         sendImmediately: false
       }
     }, function (error, response, body) {
-        console.log(body);
       if (!error && response.statusCode == 200) {
         callback(cheerio.load(body));
       }
