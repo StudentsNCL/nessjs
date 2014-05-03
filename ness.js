@@ -107,7 +107,12 @@ if(functions[argv._[0]] === undefined) {
     return;
 }
 
-functions[argv._[0]]();
+try{
+    functions[argv._[0]]();
+} catch(err) {
+    handleError(err.message);
+    return;
+}
   
 function getPage(url, callback) {
     request.get(url, {
