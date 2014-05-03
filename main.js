@@ -6,21 +6,70 @@ var ness = require('./ness'),
 var argv = optimist.argv;
 
 var functions = {
-    name: function() {
-        ness.getName(function(err, name) {
+
+    name: function()
+    {
+        ness.getName(function(err, name)
+        {
             err ? printError(err) : console.log(name);
         });
     },
-    modules: function() {
-        ness.getModules([], function(err, modules) {
-            err ? printError(err) : printJson(modules);
+
+    modules: function()
+    {
+        ness.getModules([], function(err, modules)
+        {
+            if(err)
+            {
+                printError(err);
+                return;
+            }
+
+            for(var i = 0; i < modules.length; ++ i)
+                console.log(modules[i].code + ': ' + modules[i].title);
         });
     },
-    attendance: function() {
-        ness.getModules('attendance', function(err, modules) {
-            err ? printError(err) : printJson(modules);
+
+    attendance: function()
+    {
+        ness.getModules('attendance', function(err, modules)
+        {
+            if(err)
+            {
+                printError(err);
+                return;
+            }
+
+            var isFirst = true;
+
+            for(var i = 0; i < modules.length; ++ i)
+            {
+                if (isFirst)
+                    console.log();
+                else
+                    isFirst = false;
+
+                var module = modules[i];
+
+                console.log(module.code + ': ' + module.title);
+
+                if (module.attendance === undefined)
+                {
+                    console.log ('No attendance records');
+                }
+                else
+                {
+                    console.log(module.attendance
+                                + '% attendance ('
+                                + modules[i].numLecturesAttended
+                                + '/'
+                                + modules[i].numLecturesTotal
+                                + ' lectures)');
+                }
+            }
         });
     },
+
     stages: function() {
         ness.getStages(function(err, stages) {
             err ? printError(err) : printJson(stages);
