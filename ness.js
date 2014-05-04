@@ -263,7 +263,7 @@ exports.getStages = function(callback)
                     stage.modules.push(module);
                 });
                 
-                if(stage.stage == stages.length - 1)
+                if(stage.stage == stages.length)
                     callback(null, stages);
             });
             
