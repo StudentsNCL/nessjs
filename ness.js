@@ -232,6 +232,8 @@ exports.getStages = function(callback)
 
             if(mark != 'TBR')
                 stage.mark = parseFloat(mark);
+
+            stages.push(stage);
             
             getPage('https://ness.ncl.ac.uk/student/summary/stageSummary.php?&reportyear='
                         + stage.year + '&reportstage=' + stage.stage, function(err, $)
@@ -277,8 +279,6 @@ exports.getStages = function(callback)
                             
                             };
                         });
-         
-                        callback(null, stages);
                     });
 
                     stage.modules.push(module);
@@ -288,7 +288,6 @@ exports.getStages = function(callback)
                     callback(null, stages);
             });
             
-            stages.push(stage);
             offset = 0;
         });
     });
