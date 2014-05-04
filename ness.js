@@ -242,8 +242,6 @@ exports.getStages = function(callback)
                     return;
                 }
 
-                var modules = [];
-
                 $('#mainbody tbody tr').each(function ()
                 {
                     $td = $(this).find('td');
@@ -259,6 +257,29 @@ exports.getStages = function(callback)
 
                     _.extend(module, parseAttendance($($td[7]).text().trim()));
                     cacheDetail.attendance = true;
+                    getPage('https://ness.ncl.ac.uk/student/summary/stageSummary.php?reportyear='
+                        + stage.year + '&reportstage=' + stage.stage + 'componentid=120176', function(err, $)
+                    {
+                        if(err)
+                        {
+                        console.log("error");
+                            callback(err, null);
+                            return;
+                        }
+                        $('#table tbody tr').each(function ()
+                        {
+                            $td = $(this).find('td');
+
+                            stage.modules.summary = {
+                                name: parseInt($($td[0]).text().trim()),
+                                mark: $($td[1]).text().trim(),
+                                feedback: $($td[2]).text().trim()
+                            
+                            };
+                        });
+         
+                        callback(null, stages);
+                    });
 
                     stage.modules.push(module);
                 });
