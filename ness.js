@@ -244,6 +244,7 @@ exports.getStages = function(callback)
                     return;
                 }
 
+                var count = 0;
                 $('#mainbody tbody tr').each(function ()
                 {
                     $td = $(this).find('td');
@@ -256,36 +257,57 @@ exports.getStages = function(callback)
                     module.attemptMark = $($td[4]).text().trim();
                     module.finalMark = $($td[5]).text().trim();
                     module.decision = $($td[6]).text().trim();
+                    module.summary = [];
 
                     _.extend(module, parseAttendance($($td[7]).text().trim()));
                     cacheDetail.attendance = true;
-                    getPage('https://ness.ncl.ac.uk/student/summary/stageSummary.php?reportyear='
-                        + stage.year + '&reportstage=' + stage.stage + 'componentid=120176', function(err, $)
+                    var url = $($td[8]).find('a').attr('href');
+                    getPage(url, function(err, $)
                     {
+                        count++;
                         if(err)
                         {
                         console.log("error");
                             callback(err, null);
                             return;
                         }
-                        $('#table tbody tr').each(function ()
+                        var count2 = 0;
+                        var work = [];
+                        $work = $('#assessment-tree tbody tr');
+                        var currentType = "Unknown";
+                        $work.each(function ()
                         {
+                            count2++;
                             $td = $(this).find('td');
 
-                            stage.modules.summary = {
-                                name: parseInt($($td[0]).text().trim()),
-                                mark: $($td[1]).text().trim(),
-                                feedback: $($td[2]).text().trim()
-                            
+                            item = {
+                                name: $($td[0]).text().trim(),
+                                mark: $($td[1]).text().trim()
                             };
+                            if(item.name == 'Examination')
+                                currentType = 'Examination';
+                            else if(item.name == 'Coursework')
+                                currentType = 'Coursework';
+                            else {
+                                var feedback = $($td[2]).find('a').attr('onclick');
+                                if(feedback){
+                                    var url = 'https://ness.ncl.ac.uk' + feedback.match(/'(.*?)'/)[1];
+                                    item.feedback = url;
+                                }
+                                item.type = currentType;
+                                work.push(item);
+                            }
+
                         });
+                        module.summary.push(work);
+                        //if done last part of everything then callback
+                        if(stage.stage == stages.length && count == stage.modules.length && count2 == $work.length)
+                            callback(null, stages);
                     });
 
                     stage.modules.push(module);
                 });
                 
-                if(stage.stage == stages.length)
-                    callback(null, stages);
             });
             
             offset = 0;
