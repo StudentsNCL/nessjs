@@ -297,12 +297,12 @@ exports.getStages = function(callback)
                                 item.type = currentType;
                                 work.push(item);
                             }
-
-                        });
-                        module.summary.push(work);
                         //if done last part of everything then callback
                         if(stage.stage == stages.length && count == stage.modules.length && count2 == $work.length)
                             callback(null, stages);
+                        });
+                        module.summary.push(work);
+
                     });
 
                     stage.modules.push(module);
