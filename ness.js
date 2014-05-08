@@ -271,13 +271,11 @@ exports.getStages = function(callback)
                             callback(err, null);
                             return;
                         }
-                        var count2 = 0;
                         var work = [];
                         $work = $('#assessment-tree tbody tr');
                         var currentType = "Unknown";
                         $work.each(function ()
                         {
-                            count2++;
                             $td = $(this).find('td');
 
                             item = {
@@ -297,10 +295,10 @@ exports.getStages = function(callback)
                                 item.type = currentType;
                                 work.push(item);
                             }
-                        //if done last part of everything then callback
-                        if(stage.stage == stages.length && count == stage.modules.length && count2 == $work.length)
-                            callback(null, stages);
                         });
+                        //if done last part of everything then callback
+                        if(stage.stage == stages.length && count == stage.modules.length)
+                            callback(null, stages);
                         module.summary.push(work);
 
                     });
