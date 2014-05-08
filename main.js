@@ -5,11 +5,13 @@ var ness = require('./ness'),
 
 var argv = optimist.argv;
 
+var user = {};
+
 var functions = {
 
     name: function()
     {
-        ness.getName(function(err, name)
+        ness.getName(user, function(err, name)
         {
             err ? printError(err) : console.log(name);
         });
@@ -17,7 +19,7 @@ var functions = {
 
     modules: function()
     {
-        ness.getModules([], function(err, modules)
+        ness.getModules([], user, function(err, modules)
         {
             if(err)
             {
@@ -32,7 +34,7 @@ var functions = {
 
     attendance: function()
     {
-        ness.getModules('attendance', function(err, modules)
+        ness.getModules('attendance', user, function(err, modules)
         {
             if(err)
             {
@@ -71,12 +73,12 @@ var functions = {
     },
 
     stages: function() {
-        ness.getStages(function(err, stages) {
+        ness.getStages(user, function(err, stages) {
             err ? printError(err) : printJson(stages);
         });
     },
     coursework: function() {
-        ness.getModules('coursework', function(err, modules) {
+        ness.getModules('coursework', user, function(err, modules) {
             err ? printError(err) : printJson(modules);
         });
     }
@@ -97,11 +99,11 @@ if(argv.pass === undefined) {
     return;
 }
 
-ness.user(argv.user);
-ness.pass(argv.pass);
+user.id = argv.user;
+user.pass = argv.pass;
 
 if(functions[argv._[0]] === undefined) {
-    console.log("ness: '" + argv._[0] + "' is not a ness command. See 'ness --help'.");
+    console.log("ness: '" + argv._[0] + "' is not a ness command. See 'main --help'.");
     return;
 }
 

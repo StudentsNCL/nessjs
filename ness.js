@@ -5,8 +5,6 @@ var request = require('request'),
     errors = require('./errors'),
     _ = require('underscore');
 
-var user, pass;
-
 var moduleCache = {};
 
 var cacheDetail = {
@@ -22,23 +20,7 @@ function cacheModule(code)
     return moduleCache[code] || (moduleCache[code] = { code: code });
 }
 
-exports.user = function(_user)
-{
-    if(_user !== undefined)
-        user = _user;
-    else
-        return user;
-}
-
-exports.pass = function(_pass)
-{
-    if(_pass !== undefined)
-        pass = _pass;
-    else
-        return pass;
-}
-
-exports.getModules = function(detail, callback)
+exports.getModules = function(detail, user, callback)
 {
     if (!Array.isArray(detail))
         detail = [detail];
@@ -59,8 +41,7 @@ exports.getModules = function(detail, callback)
     if (detail.indexOf('coursework') !== -1 && !cacheDetail.coursework)
     {
         ++ numOperations;
-
-        getPage('https://ness.ncl.ac.uk/php/summary.php', function(err, $)
+        getPage(user, 'https://ness.ncl.ac.uk/php/summary.php', function(err, $)
         {
             if(err)
             {
@@ -117,7 +98,7 @@ exports.getModules = function(detail, callback)
     {
         ++ numOperations;
 
-        getPage('https://ness.ncl.ac.uk/auth/student/attendance.php', function(err, $)
+        getPage(user, 'https://ness.ncl.ac.uk/auth/student/attendance.php', function(err, $)
         {
             if(err)
             {
@@ -150,7 +131,7 @@ exports.getModules = function(detail, callback)
     {
         ++ numOperations;
 
-        getPage('https://ness.ncl.ac.uk', function(err, $)
+        getPage(user, 'https://ness.ncl.ac.uk', function(err, $)
         {
             if(err)
             {
@@ -199,9 +180,9 @@ exports.getModules = function(detail, callback)
         operationComplete();
 }
 
-exports.getStages = function(callback)
+exports.getStages = function(user, callback)
 {
-    getPage('https://ness.ncl.ac.uk/student/summary/index.php', function(err, $)
+    getPage(user, 'https://ness.ncl.ac.uk/student/summary/index.php', function(err, $)
     {
         if(err)
         {
@@ -233,7 +214,7 @@ exports.getStages = function(callback)
             if(mark != 'TBR')
                 stage.mark = parseFloat(mark);
             
-            getPage('https://ness.ncl.ac.uk/student/summary/stageSummary.php?&reportyear='
+            getPage(user, 'https://ness.ncl.ac.uk/student/summary/stageSummary.php?&reportyear='
                         + stage.year + '&reportstage=' + stage.stage, function(err, $)
             {
                 if(err)
@@ -273,7 +254,7 @@ exports.getStages = function(callback)
     });
 }
 
-exports.getName = function(callback)
+exports.getName = function(user, callback)
 {
     if (name !== undefined)
     {
@@ -283,7 +264,7 @@ exports.getName = function(callback)
 
     /* Need to grab something to get the name: might as well be the module list
      */
-    exports.getModules([], function(err, modules)
+    exports.getModules([], user, function(err, modules)
     {
         if (err)
         {
@@ -295,12 +276,12 @@ exports.getName = function(callback)
     });
 }
 
-function getPage(url, callback)
+function getPage(user, url, callback)
 {
     request({
       uri: url,
       auth: {
-        user: user, pass: pass,
+        user: user.id, pass: user.pass,
         sendImmediately: false
       }
     }, function (error, response, body)
