@@ -316,7 +316,7 @@ function getPage(url, callback)
         }
         else
         {
-            callback(error, null);
+            callback(error || {error: 401}, null);
         }
     });
 }
