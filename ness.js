@@ -5,20 +5,8 @@ var request = require('request'),
     errors = require('./errors'),
     _ = require('underscore');
 
-var moduleCache = {};
-
-var cacheDetail = {
-    title: false,
-    attendance: false,
-    coursework: false
-};
-
 var name;
 
-function cacheModule(code)
-{
-    return moduleCache[code] || (moduleCache[code] = { code: code });
-}
 
 exports.getModules = function(detail, user, callback)
 {
@@ -27,20 +15,19 @@ exports.getModules = function(detail, user, callback)
     else
         detail = detail.slice(0);
 
-    detail.push('code');
-    detail.push('title');
+    //detail.push('code');
+   // detail.push('title');
 
-    if(detail.indexOf('attendance') !== -1)
-    {
-        detail.push('numLecturesTotal');
-        detail.push('numLecturesAttended');
-    }
+    //if(detail.indexOf('attendance') !== -1)
+    //{
+    //    detail.push('numLecturesTotal');
+    //    detail.push('numLecturesAttended');
+    //}
 
     var numOperations = 0;
 
     if (detail.indexOf('coursework') !== -1)
     {
-        ++ numOperations;
         getPage(user, 'https://ness.ncl.ac.uk/php/summary.php', function(err, $)
         {
             if(err)
@@ -94,10 +81,8 @@ exports.getModules = function(detail, user, callback)
         });
     }
 
-    if (detail.indexOf('attendance') !== -1 && !cacheDetail.attendance)
+    else if (detail.indexOf('attendance') !== -1)
     {
-        ++ numOperations;
-
         getPage(user, 'https://ness.ncl.ac.uk/auth/student/attendance.php', function(err, $)
         {
             if(err)
@@ -105,32 +90,30 @@ exports.getModules = function(detail, user, callback)
                 callback(err, null);
                 return;
             }
-
+            var modules = [];
             $('#mainbody tr').each(function ()
             {
                 var moduleLink = $(this).find('th a');
                 var attendanceDesc = $(this).find('td').text();
 
-                var module = cacheModule(moduleLink.text());
-                module.title = moduleLink.attr('title');
+                var module = {
+                    code: moduleLink.text(),
+                    title: moduleLink.attr('title')
+                };
 
                 _.extend(module, parseAttendance(attendanceDesc));
+                
+                modules.push(module);
             });
-
-            cacheDetail.title = true;
-            cacheDetail.attendance = true;
-            
-            operationComplete();
+            callback(null, modules);
         });
     }
 
     /* If none of the other detail is requested, we at least need the module
      * titles.
      */
-    if (numOperations == 0 && !cacheDetail.title)
+    else
     {
-        ++ numOperations;
-
         getPage(user, 'https://ness.ncl.ac.uk', function(err, $)
         {
             if(err)
@@ -138,35 +121,18 @@ exports.getModules = function(detail, user, callback)
                 callback(err, null);
                 return;
             }
-
+            var modules = [];
             $('#topmenu li').each(function () {
-                var module = cacheModule($(this).text());
-                module.title = $(this).attr('title');
+                var module = {
+                    code: $(this).text(),
+                    title: $(this).attr('title')
+                };
+                modules.push(module);
             });
 
-            operationComplete();
+            callback(null, modules);
         });
     }
-
-    function operationComplete()
-    {
-        var modules = [];
-
-        for(var code in moduleCache)
-        {
-            var module = {};
-
-            for(var j = 0; j < detail.length; ++ j)
-                module[detail[j]] = moduleCache[code][detail[j]];
-
-            modules.push(module);
-        }
-        
-        callback(null, modules);
-    }
-
-    if (numOperations == 0)
-        operationComplete();
 }
 
 exports.getStages = function(user, callback)

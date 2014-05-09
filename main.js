@@ -42,14 +42,9 @@ var functions = {
                 return;
             }
 
-            var isFirst = true;
-
             for(var i = 0; i < modules.length; ++ i)
             {
-                if (isFirst)
-                    console.log();
-                else
-                    isFirst = false;
+                console.log();
 
                 var module = modules[i];
 
