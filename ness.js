@@ -57,13 +57,23 @@ exports.getModules = function(detail, user, callback)
                         coursework.title = courseworkLink.text();
 
                         if(courseworkLink.attr('title') !== undefined)
-                            coursework.due = moment(courseworkLink.attr('title'), 'HH:mm:ss , D MMM YYYY').format()
+                            coursework.due = moment(courseworkLink.attr('title'), 'HH:mm:ss , D MMM YYYY').format();
                         var courseworkMark = $(tds[1]).find('b').first();
                         if(courseworkMark != '')
                         coursework.mark = {
                                 mark: courseworkMark.find('span').text(),
                                 total: courseworkMark.text().match(/\d+$/)[0]
                         };
+
+                        var due = $(tds[1]).find('small');
+                        //already submitted
+                        if(due != ''){
+                            $(tds[1]).find('b').remove();
+                            $(tds[1]).find('small').remove();
+                            var date = $(tds[1]).text().match(/\d+:\d+:\d+ \w+, \d+[a-z]{2} \w+ \d+/)[0];
+
+                            coursework.submitted = moment(date, 'HH:mm:ss DD MMM YYYY').format();
+                        }
 
                         module.coursework.push(coursework);
                     });
