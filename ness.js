@@ -10,14 +10,7 @@ var name;
 
 exports.getModules = function(detail, user, callback)
 {
-    if (!Array.isArray(detail))
-        detail = [detail];
-    else
-        detail = detail.slice(0);
-
-    var numOperations = 0;
-
-    if (detail.indexOf('coursework') !== -1)
+    if (detail == 'coursework')
     {
         getPage(user, 'https://ness.ncl.ac.uk/php/summary.php', function(err, $)
         {
@@ -92,7 +85,7 @@ exports.getModules = function(detail, user, callback)
         });
     }
 
-    else if (detail.indexOf('attendance') !== -1)
+    else if (detail == 'attendance')
     {
         getPage(user, 'https://ness.ncl.ac.uk/auth/student/attendance.php', function(err, $)
         {
@@ -117,6 +110,22 @@ exports.getModules = function(detail, user, callback)
                 modules.push(module);
             });
             callback(null, modules);
+        });
+    }
+    else if (detail.feedback)
+    {
+        getPage(user, 'https://ness.ncl.ac.uk/auth/student/showcom.php?exid='+detail.feedback, function(err, $)
+        {
+            if(err)
+            {
+                callback(err, null);
+                return;
+            }
+            comment = {
+                comment: $('p.comment').text(),
+                marker: $('p.signature').text()
+            };
+            callback(null, comment);
         });
     }
 

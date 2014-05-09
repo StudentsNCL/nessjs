@@ -76,6 +76,11 @@ var functions = {
         ness.getModules('coursework', user, function(err, modules) {
             err ? printError(err) : printJson(modules);
         });
+    },
+    feedback: function() {
+        ness.getModules({feedback: 30488}, user, function(err, modules) {
+            err ? printError(err) : printJson(modules);
+        });
     }
 };
 
