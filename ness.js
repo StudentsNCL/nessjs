@@ -72,6 +72,20 @@ exports.getModules = function(detail, user, callback)
                             coursework.submitted = moment(date, 'HH:mm:ss DD MMM YYYY').format();
                         }
 
+                        //if general comments or feedback
+                        if(tds.length > 2){
+                            //if just feedback or just general comments
+                            if(tds.length == 3){
+                                if($(tds[2]).find('a').text() == 'General comments')
+                                    coursework.general = $(tds[2]).find('a').attr('href').match(/\d+/)[0];
+                                else
+                                    coursework.feedback = $(tds[2]).find('a').attr('href').match(/,\d+/)[0].substring(1);
+                            }
+                            else{
+                                coursework.general = $(tds[2]).find('a').attr('href').match(/\d+/)[0];
+                                coursework.feedback = $(tds[3]).find('a').attr('href').match(/,\d+/)[0].substring(1);
+                            }
+                        }
                         module.coursework.push(coursework);
                     });
 
