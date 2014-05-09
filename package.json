@@ -1,6 +1,6 @@
 {
   "name": "nessjs",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "CLI interface for NESS",
   "main": "ness.js",
   "dependencies": {
