@@ -38,7 +38,7 @@ exports.getModules = function(detail, user, callback)
 
     var numOperations = 0;
 
-    if (detail.indexOf('coursework') !== -1 && !cacheDetail.coursework)
+    if (detail.indexOf('coursework') !== -1)
     {
         ++ numOperations;
         getPage(user, 'https://ness.ncl.ac.uk/php/summary.php', function(err, $)
@@ -49,18 +49,19 @@ exports.getModules = function(detail, user, callback)
                 return;
             }
 
-            var module;
-
+            var modules = [];
+        
+            var module = {};
             $('#mainbody dl').first().children().each(function(i)
             {
                 var $this = $(this);
-
                 if(i % 2 == 0)
                 {
+                    module = {};
                     var moduleLink = $this.find('a').first();
-                    module = cacheModule(moduleLink.attr('title'));
+                    module.code = moduleLink.attr('title');
                     module.title =  moduleLink.text().split(' - ')[1];
-                    module.coursework =  [];
+                    module.coursework = [];
                 }
                 else
                 {
@@ -84,13 +85,12 @@ exports.getModules = function(detail, user, callback)
                     });
 
                     /* var moduleSummary = $(this).find('table:eq(1) tr:first'); */
+                    
+                    modules.push(module);
                 }
             });
-
-            cacheDetail.title = true;
-            cacheDetail.coursework = true;
-
-            operationComplete();
+            
+            callback(null, modules);
         });
     }
 
@@ -144,23 +144,12 @@ exports.getModules = function(detail, user, callback)
                 module.title = $(this).attr('title');
             });
 
-            cacheDetail.title = true;
-
             operationComplete();
         });
     }
 
     function operationComplete()
     {
-        if((-- numOperations) > 0)
-        {
-            /* Still got something to do
-             */
-            return;
-        }
-
-        /* Filter the modules from the cache to only include the requested detail
-         */
         var modules = [];
 
         for(var code in moduleCache)
