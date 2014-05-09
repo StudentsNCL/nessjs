@@ -49,8 +49,12 @@ exports.getModules = function(detail, user, callback)
                         var courseworkLink = $(tds[0]).find('a');
                         var coursework = {};
 
-                        if(courseworkLink.length > 0)
-                            coursework.url = courseworkLink.attr('href');
+                        if(courseworkLink.length > 0){
+                            var url = courseworkLink.attr('href');
+                            if(url.charAt(0) == '/')
+                                url = 'https://ness.ncl.ac.uk' + url;
+                            coursework.url = url;
+                        }
                         else
                             courseworkLink = $(tds[0]).find('span');
 
