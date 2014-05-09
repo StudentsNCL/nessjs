@@ -15,15 +15,6 @@ exports.getModules = function(detail, user, callback)
     else
         detail = detail.slice(0);
 
-    //detail.push('code');
-   // detail.push('title');
-
-    //if(detail.indexOf('attendance') !== -1)
-    //{
-    //    detail.push('numLecturesTotal');
-    //    detail.push('numLecturesAttended');
-    //}
-
     var numOperations = 0;
 
     if (detail.indexOf('coursework') !== -1)
@@ -184,17 +175,17 @@ exports.getStages = function(user, callback)
                 {
                     $td = $(this).find('td');
 
-                    var module = cacheModule($($td[0]).text().trim());
-
-                    module.credits = parseInt($($td[1]).text().trim());
-                    module.year = $($td[2]).text().trim();
-                    module.attempt = $($td[3]).text().trim();
-                    module.attemptMark = $($td[4]).text().trim();
-                    module.finalMark = $($td[5]).text().trim();
-                    module.decision = $($td[6]).text().trim();
+                    var module = {
+                            code: $($td[0]).text().trim(),
+                            credits: parseInt($($td[1]).text().trim()),
+                            year: $($td[2]).text().trim(),
+                            attempt: $($td[3]).text().trim(),
+                            attemptMark: $($td[4]).text().trim(),
+                            finalMark: $($td[5]).text().trim(),
+                            decision: $($td[6]).text().trim()
+                        };
 
                     _.extend(module, parseAttendance($($td[7]).text().trim()));
-                    cacheDetail.attendance = true;
 
                     stage.modules.push(module);
                 });
@@ -211,21 +202,14 @@ exports.getStages = function(user, callback)
 
 exports.getName = function(user, callback)
 {
-    if (name !== undefined)
+  getPage(user, 'https://ness.ncl.ac.uk', function(err, $)
     {
-        callback(null, name);
-        return;
-    }
-
-    /* Need to grab something to get the name: might as well be the module list
-     */
-    exports.getModules([], user, function(err, modules)
-    {
-        if (err)
+        if(err)
         {
             callback(err, null);
             return;
         }
+        var name = $('#uname').text().trim().split(' (')[0]
 
         callback(null, name);
     });
@@ -244,9 +228,6 @@ function getPage(user, url, callback)
         if (!error && response.statusCode == 200)
         {
             var $ = cheerio.load(body);
-
-            if (name === undefined)
-                name = $('#uname').text().trim().split(' (')[0];
 
             callback(null, $);
         }
