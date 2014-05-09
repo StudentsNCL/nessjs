@@ -81,6 +81,11 @@ var functions = {
         ness.getModules({feedback: 30488}, user, function(err, modules) {
             err ? printError(err) : printJson(modules);
         });
+    },
+    general: function() {
+        ness.getModules({general: 30303}, user, function(err, modules) {
+            err ? printError(err) : printJson(modules);
+        });
     }
 };
 

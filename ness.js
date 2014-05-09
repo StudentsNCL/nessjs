@@ -142,6 +142,25 @@ exports.getModules = function(detail, user, callback)
             callback(null, comment);
         });
     }
+    else if (detail.general)
+    {
+        getPage(user, 'https://ness.ncl.ac.uk/auth/student/showgen.php?exid='+detail.general, function(err, $)
+        {
+            if(err)
+            {
+                callback(err, null);
+                return;
+            }
+            var text = $('.leftc');
+            var marker = text.find('p.signature');
+            text.find('p.signature').remove();
+            comment = {
+                comment: text.text(),
+                marker: marker.text()
+            };
+            callback(null, comment);
+        });
+    }
 
     /* If none of the other detail is requested, we at least need the module
      * titles.

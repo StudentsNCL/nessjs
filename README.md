@@ -16,6 +16,7 @@ Usage (CLI example)
         stages
         coursework
         feedback
+        general
 
 
 
