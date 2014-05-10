@@ -86,6 +86,11 @@ var functions = {
         ness.getModules({general: 30303}, user, function(err, modules) {
             err ? printError(err) : printJson(modules);
         });
+    },
+    specification: function() {
+        ness.getSpec('30489', user, function(err, modules) {
+            err ? printError(err) : printJson(modules);
+        });
     }
 };
 

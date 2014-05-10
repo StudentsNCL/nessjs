@@ -54,7 +54,7 @@ exports.getModules = function(detail, user, callback)
                         coursework.title = courseworkLink.text();
 
                         if(courseworkLink.attr('title') !== undefined)
-                            coursework.due = moment(courseworkLink.attr('title'), 'HH:mm:ss , D MMM YYYY').format();
+                            coursework.due = moment(courseworkLink.attr('title'), 'HH:mm:ss , D MMM YYYY');
                         var courseworkMark = $(tds[1]).find('b').first();
 
                         if(courseworkMark.children('span').length > 0)
@@ -70,7 +70,7 @@ exports.getModules = function(detail, user, callback)
                             $(tds[1]).find('small').remove();
                             var date = $(tds[1]).text().match(/\d+:\d+:\d+ \w+, \d+[a-z]{2} \w+ \d+/)[0];
 
-                            coursework.submitted = moment(date, 'HH:mm:ss DD MMM YYYY').format();
+                            coursework.submitted = moment(date, 'HH:mm:ss DD MMM YYYY');
                         }
 
                         //if general comments or feedback
@@ -266,6 +266,34 @@ exports.getName = function(user, callback)
 
         callback(null, name);
     });
+}
+
+exports.getSpec = function(exid, user, callback)
+{
+    getPage(user, 'https://ness.ncl.ac.uk/auth/info/showex.php?exid=' + exid, function(err, $)
+        {
+            console.log("before");
+            if(err)
+            {
+                callback(err, null);
+                return;
+            }
+            var mainbody = $('#mainbody');
+            var trs = mainbody.find('tbody tr');
+            var module = mainbody.find('h2').text().split(' - ');
+            var specification = {
+                module: {
+                    code: module[0],
+                    name: module[1]
+                },
+                title: mainbody.find('h3').text(),
+                due: mainbody.find('h4').text(),
+                mark: mainbody.find('p').first().text(),
+                spec: $(trs[0]).find('td').html(),
+                updated: moment($(trs[1]).text(), 'DD MMM YYYY HH:mm:ss')
+            };
+            callback(null, specification);
+        });
 }
 
 function getPage(user, url, callback)
