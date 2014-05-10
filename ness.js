@@ -56,11 +56,12 @@ exports.getModules = function(detail, user, callback)
                         if(courseworkLink.attr('title') !== undefined)
                             coursework.due = moment(courseworkLink.attr('title'), 'HH:mm:ss , D MMM YYYY').format();
                         var courseworkMark = $(tds[1]).find('b').first();
-                        if(courseworkMark != '')
-                        coursework.mark = {
-                                mark: courseworkMark.find('span').text(),
-                                total: courseworkMark.text().match(/\d+$/)[0]
-                        };
+
+                        if(courseworkMark.children('span').length > 0)
+                            coursework.mark = {
+                                    mark: courseworkMark.find('span').text(),
+                                    total: courseworkMark.text().match(/\d+$/)[0]
+                            };
 
                         var due = $(tds[1]).find('small');
                         //already submitted
