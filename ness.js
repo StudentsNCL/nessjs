@@ -127,25 +127,9 @@ exports.getModules = function(detail, user, callback)
             callback(null, modules);
         });
     }
-    else if (detail.feedback)
+    else if (detail.feedback || detail.general)
     {
-        getPage(user, 'https://ness.ncl.ac.uk/auth/student/showcom.php?exid='+detail.feedback, function(err, $)
-        {
-            if(err)
-            {
-                callback(err, null);
-                return;
-            }
-            comment = {
-                comment: $('p.comment').text(),
-                marker: $('p.signature').text()
-            };
-            callback(null, comment);
-        });
-    }
-    else if (detail.general)
-    {
-        getPage(user, 'https://ness.ncl.ac.uk/auth/student/showgen.php?exid='+detail.general, function(err, $)
+        getPage(user, 'https://ness.ncl.ac.uk/auth/student/show' + (detail.feedback?'com':'gen') + '.php?exid=' + (detail.feedback || detail.general), function(err, $)
         {
             if(err)
             {
@@ -155,9 +139,15 @@ exports.getModules = function(detail, user, callback)
             var text = $('.leftc');
             var marker = text.find('p.signature');
             text.find('p.signature').remove();
+            text.find('div').replaceWith(function() {
+                return $('<p></p>').append($(this).contents());
+            });
+            text.find('br').remove();
+
             comment = {
-                comment: text.text(),
-                marker: marker.text()
+                comment: text.html(),
+                marker: marker.text(),
+                title: $('h3').text().split('"')[1]
             };
             callback(null, comment);
         });
