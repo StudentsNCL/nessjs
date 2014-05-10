@@ -276,7 +276,6 @@ exports.getSpec = function(exid, user, callback)
 {
     getPage(user, 'https://ness.ncl.ac.uk/auth/info/showex.php?exid=' + exid, function(err, $)
         {
-            console.log("before");
             if(err)
             {
                 callback(err, null);
