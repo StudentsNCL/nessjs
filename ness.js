@@ -77,6 +77,12 @@ exports.getModules = function(detail, user, callback)
                             coursework.submitted = moment(date, 'HH:mm:ss DD MMM YYYY');
                         }
 
+                        //check if class shows coursework is late or has been given an extension
+                        if($(tds[1]).find('late, llate') > 0)
+                            coursework.late = true;
+                        else if($(tds[1]).find('extend, lextend') > 0)
+                            coursework.extension = true;
+
                         //if general comments or feedback
                         if(tds.length > 2){
                             //if just feedback or just general comments
