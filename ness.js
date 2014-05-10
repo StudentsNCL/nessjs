@@ -42,10 +42,14 @@ exports.getModules = function(detail, user, callback)
                         var courseworkLink = $(tds[0]).find('a');
                         var coursework = {};
 
+                        //if there is a spec url
                         if(courseworkLink.length > 0){
                             var url = courseworkLink.attr('href');
-                            if(url.charAt(0) == '/')
+                            //is ness url
+                            if(url.charAt(0) == '/'){
                                 url = 'https://ness.ncl.ac.uk' + url;
+                                coursework.spec = url.match(/exid=\d+/)[0].split('=')[1];
+                            }
                             coursework.url = url;
                         }
                         else
