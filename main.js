@@ -71,7 +71,12 @@ var functions = {
     },
 
     stages: function() {
-        ness.getStages(function(err, stages) {
+        ness.getStages({}, function(err, stages) {
+            err ? printError(err) : printJson(stages);
+        });
+    },
+    module: function() {
+        ness.getStages({id: 156973, year: 2013, stage: 2}, function(err, stages) {
             err ? printError(err) : printJson(stages);
         });
     },

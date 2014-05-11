@@ -199,81 +199,122 @@ exports.getModules = function(detail, callback)
         operationComplete();
 }
 
-exports.getStages = function(callback)
+exports.getStages = function(detail, callback)
 {
-    getPage('https://ness.ncl.ac.uk/student/summary/index.php', function(err, $)
-    {
-        if(err)
-        {
-            callback(err, null);
-            return;
-        }
-
-        var stages = [];
-        var offset = 1;
-
-        //each year
-        $('#mainbody tbody tr').each(function ()
-        {
-            $td = $(this).find('td');
-
-            var stage = {
-                stage: parseInt($($td[0 + offset]).text().trim()),
-                year: $($td[1 + offset]).text().trim(),
-                decision: $($td[4 + offset]).text().trim(),
-                modules: []
-            };
-
-            var credits = $($td[2 + offset]).text().trim();
-
-            if(credits != 'TBR')
-                stage.credits = parseInt(credits.substr(1));
-
-            var mark = $($td[3 + offset]).text().trim();
-
-            if(mark != 'TBR')
-                stage.mark = parseFloat(mark);
-
-            stages.push(stage);
-            
-            getPage('https://ness.ncl.ac.uk/student/summary/stageSummary.php?&reportyear='
-                        + stage.year + '&reportstage=' + stage.stage, function(err, $)
+    //requesting specific module
+    if(detail.id){
+        getPage('https://ness.ncl.ac.uk/student/summary/moduleSummary.php?reportyear=' + detail.year + '&reportstage=' + detail.stage + '&componentid=' + detail.id, function(err, $)
             {
                 if(err)
                 {
                     callback(err, null);
                     return;
                 }
-
-                var count = 0;
-                $('#mainbody tbody tr').each(function ()
+                var work = [];
+                $work = $('#assessment-tree tbody tr');
+                var currentType = "Unknown";
+                $work.each(function ()
                 {
                     $td = $(this).find('td');
 
-                    var module = {
-                        code: $($td[0]).text().trim(),
-                        credits: parseInt($($td[1]).text().trim()),
-                        year: $($td[2]).text().trim(),
-                        attempt: $($td[3]).text().trim(),
-                        attemptMark: $($td[4]).text().trim(),
-                        finalMark: $($td[5]).text().trim(),
-                        decision: $($td[6]).text().trim(),
-                        id: $($td[8]).find('a').attr('href').split('componentid=')[1]
+                    item = {
+                        name: $($td[0]).text().trim(),
+                        mark: $($td[1]).text().trim()
                     };
-
-                    _.extend(module, parseAttendance($($td[7]).text().trim()));
-            
-                    stage.modules.push(module);
+                    if(item.name == 'Examination')
+                        currentType = 'Examination';
+                    else if(item.name == 'Coursework')
+                        currentType = 'Coursework';
+                    else {
+                        var feedback = $($td[2]).find('a').attr('onclick');
+                        if(feedback){
+                            var url = 'https://ness.ncl.ac.uk' + feedback.match(/'(.*?)'/)[1];
+                            item.feedback = url;
+                        }
+                        item.type = currentType;
+                        work.push(item);
+                    }
                 });
 
-                if(stage.stage == stages.length)
-                    callback(null, stages);
-                
+                callback(null, work);
+
             });
-            
-            offset = 0;
+    }
+    else{
+        getPage('https://ness.ncl.ac.uk/student/summary/index.php', function(err, $)
+        {
+            if(err)
+            {
+                callback(err, null);
+                return;
+            }
+
+            var stages = [];
+            var offset = 1;
+
+            //each year
+            $('#mainbody tbody tr').each(function ()
+            {
+                $td = $(this).find('td');
+
+                var stage = {
+                    stage: parseInt($($td[0 + offset]).text().trim()),
+                    year: $($td[1 + offset]).text().trim(),
+                    decision: $($td[4 + offset]).text().trim(),
+                    modules: []
+                };
+
+                var credits = $($td[2 + offset]).text().trim();
+
+                if(credits != 'TBR')
+                    stage.credits = parseInt(credits.substr(1));
+
+                var mark = $($td[3 + offset]).text().trim();
+
+                if(mark != 'TBR')
+                    stage.mark = parseFloat(mark);
+
+                stages.push(stage);
+                
+                getPage('https://ness.ncl.ac.uk/student/summary/stageSummary.php?&reportyear='
+                            + stage.year + '&reportstage=' + stage.stage, function(err, $)
+                {
+                    if(err)
+                    {
+                        callback(err, null);
+                        return;
+                    }
+
+                    var count = 0;
+                    $('#mainbody tbody tr').each(function ()
+                    {
+                        $td = $(this).find('td');
+
+                        var module = {
+                            code: $($td[0]).text().trim(),
+                            credits: parseInt($($td[1]).text().trim()),
+                            year: $($td[2]).text().trim(),
+                            attempt: $($td[3]).text().trim(),
+                            attemptMark: $($td[4]).text().trim(),
+                            finalMark: $($td[5]).text().trim(),
+                            decision: $($td[6]).text().trim(),
+                            id: $($td[8]).find('a').attr('href').split('componentid=')[1]
+                        };
+
+                        _.extend(module, parseAttendance($($td[7]).text().trim()));
+                
+                        stage.modules.push(module);
+                    });
+
+                    if(stage.stage == stages.length)
+                        callback(null, stages);
+                    
+                });
+                
+                offset = 0;
+            });
         });
-    });
+    }
 }
 
 exports.getName = function(callback)
