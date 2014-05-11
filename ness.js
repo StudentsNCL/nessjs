@@ -212,6 +212,7 @@ exports.getStages = function(callback)
         var stages = [];
         var offset = 1;
 
+        //each year
         $('#mainbody tbody tr').each(function ()
         {
             $td = $(this).find('td');
@@ -249,62 +250,24 @@ exports.getStages = function(callback)
                 {
                     $td = $(this).find('td');
 
-                    var module = cacheModule($($td[0]).text().trim());
-
-                    module.credits = parseInt($($td[1]).text().trim());
-                    module.year = $($td[2]).text().trim();
-                    module.attempt = $($td[3]).text().trim();
-                    module.attemptMark = $($td[4]).text().trim();
-                    module.finalMark = $($td[5]).text().trim();
-                    module.decision = $($td[6]).text().trim();
-                    module.summary = [];
+                    var module = {
+                        code: $($td[0]).text().trim(),
+                        credits: parseInt($($td[1]).text().trim()),
+                        year: $($td[2]).text().trim(),
+                        attempt: $($td[3]).text().trim(),
+                        attemptMark: $($td[4]).text().trim(),
+                        finalMark: $($td[5]).text().trim(),
+                        decision: $($td[6]).text().trim(),
+                        id: $($td[8]).find('a').attr('href').split('componentid=')[1]
+                    };
 
                     _.extend(module, parseAttendance($($td[7]).text().trim()));
-                    cacheDetail.attendance = true;
-                    var url = $($td[8]).find('a').attr('href');
-                    getPage(url, function(err, $)
-                    {
-                        count++;
-                        if(err)
-                        {
-                        console.log("error");
-                            callback(err, null);
-                            return;
-                        }
-                        var work = [];
-                        $work = $('#assessment-tree tbody tr');
-                        var currentType = "Unknown";
-                        $work.each(function ()
-                        {
-                            $td = $(this).find('td');
-
-                            item = {
-                                name: $($td[0]).text().trim(),
-                                mark: $($td[1]).text().trim()
-                            };
-                            if(item.name == 'Examination')
-                                currentType = 'Examination';
-                            else if(item.name == 'Coursework')
-                                currentType = 'Coursework';
-                            else {
-                                var feedback = $($td[2]).find('a').attr('onclick');
-                                if(feedback){
-                                    var url = 'https://ness.ncl.ac.uk' + feedback.match(/'(.*?)'/)[1];
-                                    item.feedback = url;
-                                }
-                                item.type = currentType;
-                                work.push(item);
-                            }
-                        });
-                        //if done last part of everything then callback
-                        if(stage.stage == stages.length && count == stage.modules.length)
-                            callback(null, stages);
-                        module.summary.push(work);
-
-                    });
-
+            
                     stage.modules.push(module);
                 });
+
+                if(stage.stage == stages.length)
+                    callback(null, stages);
                 
             });
             
