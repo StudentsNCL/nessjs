@@ -68,7 +68,12 @@ var functions = {
     },
 
     stages: function() {
-        ness.getStages(user, function(err, stages) {
+        ness.getStages({}, user, function(err, stages) {
+            err ? printError(err) : printJson(stages);
+        });
+    },
+    module: function() {
+        ness.getStages({id: 156973, year: 2013, stage: 2}, user, function(err, stages) {
             err ? printError(err) : printJson(stages);
         });
     },
