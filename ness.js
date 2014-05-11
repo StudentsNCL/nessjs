@@ -241,10 +241,12 @@ exports.getStages = function(detail, user, callback)
 
             var stages = [];
             var offset = 1;
+            var count = 0;
 
             //each year
             $('#mainbody tbody tr').each(function ()
             {
+                count++;
                 $td = $(this).find('td');
 
                 var stage = {
@@ -297,7 +299,7 @@ exports.getStages = function(detail, user, callback)
                         stage.modules.push(module);
                     });
 
-                    if(stage.stage == stages.length)
+                    if(stages.length == stage.stage && stages.length == count)
                         callback(null, stages);
                     
                 });
