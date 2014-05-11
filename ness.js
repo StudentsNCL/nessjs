@@ -290,10 +290,9 @@ exports.getStages = function(detail, user, callback)
                             attemptMark: $($td[4]).text().trim(),
                             finalMark: $($td[5]).text().trim(),
                             decision: $($td[6]).text().trim(),
-                            id: $($td[8]).find('a').attr('href').split('componentid=')[1]
+                            id: $($td[8]).find('a').attr('href').split('componentid=')[1],
+                            attendance: parseAttendance($($td[7]).text().trim())
                         };
-
-                        _.extend(module, parseAttendance($($td[7]).text().trim()));
                 
                         stage.modules.push(module);
                     });
@@ -380,9 +379,9 @@ function parseAttendance(attendanceDesc)
         return {};
 
     return {
-        numLecturesTotal: parseInt(attendanceDesc.split('(')[1].split('/')[1]),
-        numLecturesAttended: parseInt(attendanceDesc.split('(')[1].split('/')[0]),
-        attendance: parseInt(attendanceDesc.split('%')[0])
+        attendance: parseInt(attendanceDesc.split('%')[0]),
+        attended: parseInt(attendanceDesc.split('(')[1].split('/')[0]),
+        total: parseInt(attendanceDesc.split('(')[1].split('/')[1])
     };
 }
 

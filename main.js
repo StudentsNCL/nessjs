@@ -58,9 +58,9 @@ var functions = {
                 {
                     console.log(module.attendance
                                 + '% attendance ('
-                                + modules[i].numLecturesAttended
+                                + modules[i].attended
                                 + '/'
-                                + modules[i].numLecturesTotal
+                                + modules[i].total
                                 + ' lectures)');
                 }
             }
