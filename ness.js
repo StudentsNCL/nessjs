@@ -200,34 +200,92 @@ exports.getStages = function(detail, user, callback)
                     callback(err, null);
                     return;
                 }
-                var work = [];
-                $work = $('#assessment-tree tbody tr');
-                var currentType = "Unknown";
-                $work.each(function ()
-                {
-                    $td = $(this).find('td');
 
-                    item = {
-                        name: $($td[0]).text().trim(),
-                        mark: $($td[1]).text().trim()
-                    };
-                    if(item.name == 'Examination')
-                        currentType = 'Examination';
-                    else if(item.name == 'Coursework')
-                        currentType = 'Coursework';
-                    else {
-                        var feedback = $($td[2]).find('a').attr('onclick');
-                        if(feedback){
-                            var url = 'https://ness.ncl.ac.uk' + feedback.match(/'(.*?)'/)[1];
-                            item.feedback = url;
+                var work = {
+                    code: $('#assessment-tree caption').text().trim().split(' ')[0],
+                    exams: [],
+                    coursework: []
+                };
+
+                //contains current coursework until we find next assessment group
+                var currentCoursework = {
+                    coursework: []
+                };
+
+                //loop through every table row
+                $('#assessment-tree tbody tr').each(function ()
+                {
+                    var tds = $(this).find('td');
+                    var name = $(tds[0]).text().trim().split(' - ');
+                    //if it is an exam
+                    if($(this).find('.assessment-paper-row').length > 0) {
+                        var exam = {
+                            name: name[0],
+                            percentage: name[1].substring(0, name[1].length - 1)
+                        };
+
+                        //if there is a mark then parse it to get details
+                        var mark = $(tds[1]).text().trim();
+                        if(mark != '')
+                            exam.mark = mark.substring(0, mark.length - 1);
+
+                        //if there is feedback then regex it to get stid and paperId
+                        var feedback = $(tds[2]).find('a');
+                        if(feedback.length > 0){
+                            var url = $(feedback).attr('onclick').match(/\d+/g);
+                            exam.feedback = {};
+                            exam.feedback.stid = url[0];
+                            exam.feedback.paperId = url[1];
                         }
-                        item.type = currentType;
-                        work.push(item);
+
+                        work.exams.push(exam);
+                    }
+                    //if its a group of coursework
+                    else if($(this).find('.assessment-exercisegroup-row').length > 0){
+                        /*if we have finished an exercise group already then
+                         *push it to the coursework array and reset it for next run
+                        */
+                        if(currentCoursework.name)
+                            work.coursework.push(currentCoursework);
+                        currentCoursework = {
+                            name: name[0],
+                            percentage: name[1].substring(0, name[1].length - 1),
+                            coursework: []
+                        };
+
+                    }
+                    //if its a piece of coursework
+                    else if($(this).find('.assessment-exercise-row').length > 0){
+                        var coursework = {
+                            name: name[0],
+                            percentage: name[1].substring(0, name[1].length - 1)
+                        };
+
+                        //if there is a mark then parse it to get details
+                        var mark = $(tds[1]).text().trim();
+                        if(mark != ''){
+                            var marks = mark.match(/[\d\.]+/g);
+                            coursework.mark = {
+                                percent: marks[0],
+                                mark: marks[1],
+                                total: marks[2]
+                            };
+                        }
+
+                        //if there is feedback read the url and set feedback to be exid
+                        var feedback = $(tds[2]).find('a');
+                        if(feedback.length > 0){
+                            coursework.feedback = $(feedback).attr('onclick').match(/exid=([\d]+)/)[1];
+                        }
+
+                        //push coursework to temporary currentCoursework
+                        currentCoursework.coursework.push(coursework);
                     }
                 });
 
+                //push last currentCoursework to coursework array before callback
+                work.coursework.push(currentCoursework);
                 callback(null, work);
-
             });
     }
     else {
