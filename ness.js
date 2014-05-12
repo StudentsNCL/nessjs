@@ -78,9 +78,9 @@ exports.getModules = function(detail, user, callback)
                         }
 
                         //check if class shows coursework is late or has been given an extension
-                        if($(this).find('late, llate') > 0)
+                        if($(tds[1]).hasClass('llate') || $(tds[1]).hasClass('late'))
                             coursework.late = true;
-                        else if($(this).find('extend, lextend') > 0)
+                        else if($(tds[1]).hasClass('lextend') || $(tds[1]).hasClass('extend'))
                             coursework.extension = true;
 
                         //if general comments or feedback
