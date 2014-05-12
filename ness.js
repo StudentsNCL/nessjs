@@ -137,31 +137,6 @@ exports.getModules = function(detail, user, callback)
             callback(null, modules);
         });
     }
-    else if (detail.feedback || detail.general)
-    {
-        getPage(user, 'https://ness.ncl.ac.uk/auth/student/show' + (detail.feedback?'com':'gen') + '.php?exid=' + (detail.feedback || detail.general), function(err, $)
-        {
-            if(err)
-            {
-                callback(err, null);
-                return;
-            }
-            var text = $('.leftc');
-            var marker = text.find('p.signature');
-            text.find('p.signature').remove();
-            text.find('div').replaceWith(function() {
-                return $('<p></p>').append($(this).contents());
-            });
-            text.find('br').remove();
-
-            comment = {
-                comment: text.html(),
-                marker: marker.text(),
-                title: $('h3').text().split('"')[1]
-            };
-            callback(null, comment);
-        });
-    }
 
     /* If none of the other detail is requested, we at least need the module
      * titles.
@@ -351,18 +326,71 @@ exports.getStages = function(detail, user, callback)
                             id: $($td[8]).find('a').attr('href').split('componentid=')[1],
                             attendance: parseAttendance($($td[7]).text().trim())
                         };
-                
+
                         stage.modules.push(module);
                     });
 
                 stages.push(stage);
                     if(stages.length == count)
                         callback(null, stages);
-                    
+
                 });
-                
+
                 offset = 0;
             });
+        });
+    }
+}
+
+exports.getFeedback = function(detail, user, callback) {
+    if (detail.personal || detail.general)
+    {
+        getPage(user, 'https://ness.ncl.ac.uk/auth/student/show' + (detail.personal?'com':'gen') + '.php?exid=' + (detail.personal || detail.general), function(err, $)
+        {
+            if(err)
+            {
+                callback(err, null);
+                return;
+            }
+            var text = $('.leftc');
+            var marker = text.find('p.signature');
+            text.find('p.signature').remove();
+            text.find('div').replaceWith(function() {
+                return $('<p></p>').append($(this).contents());
+            });
+            text.find('br').remove();
+            comment = {
+                comment: text.html(),
+                marker: marker.text(),
+                title: $('h3').text().split('"')[1]
+            };
+
+            callback(null, comment);
+        });
+    }
+
+    else if (detail.paperId) {
+        getPage(user, 'https://ness.ncl.ac.uk/student/summary/feedbackExam.php?stid=' + detail.stid + '&PaperId=' + detail.paperId, function(err, $)
+        {
+            if(err)
+            {
+                callback(err, null);
+                return;
+            }
+            var text = $('.comment');
+
+            comment = {
+                title: $('h3').text().split('"')[1]
+            };
+
+            var individual = $(text[0]).html();
+            if(individual != 'None')
+                comment.individual = individual;
+            var general = $(text[1]).html();
+            if(general != 'None')
+                comment.general = general;
+
+            callback(null, comment);
         });
     }
 }

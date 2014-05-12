@@ -83,12 +83,17 @@ var functions = {
         });
     },
     feedback: function() {
-        ness.getModules({feedback: 30488}, user, function(err, modules) {
+        ness.getFeedback({personal: 30487}, user, function(err, modules) {
             err ? printError(err) : printJson(modules);
         });
     },
-    general: function() {
-        ness.getModules({general: 30303}, user, function(err, modules) {
+    generalFeedback: function() {
+        ness.getFeedback({general: 30303}, user, function(err, modules) {
+            err ? printError(err) : printJson(modules);
+        });
+    },
+    examFeedback: function() {
+        ness.getFeedback({paperId: 156975, stid: 169676}, user, function(err, modules) {
             err ? printError(err) : printJson(modules);
         });
     },
