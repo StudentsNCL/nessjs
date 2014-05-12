@@ -299,12 +299,11 @@ exports.getStages = function(detail, user, callback)
 
             var stages = [];
             var offset = 1;
-            var count = 0;
+            var count = $('#mainbody tbody tr').length;
 
             //each year
             $('#mainbody tbody tr').each(function ()
             {
-                count++;
                 $td = $(this).find('td');
 
                 var stage = {
@@ -324,7 +323,6 @@ exports.getStages = function(detail, user, callback)
                 if(mark != 'TBR')
                     stage.mark = parseFloat(mark);
 
-                stages.push(stage);
 
             if(mark != 'TBR')
                 stage.mark = parseFloat(mark);
@@ -357,7 +355,8 @@ exports.getStages = function(detail, user, callback)
                         stage.modules.push(module);
                     });
 
-                    if(stages.length == stage.stage && stages.length == count)
+                stages.push(stage);
+                    if(stages.length == count)
                         callback(null, stages);
                     
                 });
