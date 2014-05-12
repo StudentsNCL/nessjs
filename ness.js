@@ -311,26 +311,69 @@ exports.getStages = function(detail, user, callback)
                         return;
                     }
 
+                    var totalAttempts = 0;
+                    var attempt = 1;
+                    var current_module = {};
+                    // loop through rows (attempts on modules)
                     $('#mainbody tbody tr').each(function ()
                     {
+                        var offset = 0;
+
                         $td = $(this).find('td');
 
+                        // If there's there's no totalAttempts, we're on a new module
+                        if (totalAttempts === 0) {
+                            var height = $td.first().attr('rowspan');
+                            totalAttempts = height ? height : 1;
+                        }
+
+                        // Need to offset row as not first attempt
+                        if (totalAttempts > 1 && attempt > 1) {
+                            offset = 3;
+                        }
+                        else {
+                            // Cache module details ready for more attempts
+                            current_module = {
+                                code: $($td[0]).text().trim(),
+                                credits: parseInt($($td[1]).text().trim()),
+                                year: $($td[2]).text().trim()
+                            }
+                        }
+
                         var module = {
-                            code: $($td[0]).text().trim(),
-                            credits: parseInt($($td[1]).text().trim()),
-                            year: $($td[2]).text().trim(),
-                            attempt: $($td[3]).text().trim(),
-                            attemptMark: $($td[4]).text().trim(),
-                            finalMark: $($td[5]).text().trim(),
-                            decision: $($td[6]).text().trim(),
-                            id: $($td[8]).find('a').attr('href').split('componentid=')[1],
-                            attendance: parseAttendance($($td[7]).text().trim())
+                            code: current_module.code,
+                            credits: current_module.credits,
+                            year: current_module.year,
+                            attempt: $($td[3 - offset]).text().trim(),
+                            attemptMark: $($td[4 - offset]).text().trim(),
+                            finalMark: $($td[5 - offset]).text().trim(),
+                            decision: $($td[6 - offset]).text().trim(),
+                            id: $($td[$td.length - 1]).find('a').attr('href').split('componentid=')[1],
                         };
 
+                        // Check if there is attendence column
+                        if (($td.length + offset) === 9) {
+                            module.attendance = parseAttendance($($td[7 - offset]).text().trim())
+                        }
+                        else {
+                            module.attendance = null;
+                        }
+
                         stage.modules.push(module);
+
+                        if (attempt < totalAttempts) {
+                            attempt++;
+                        }
+                        else {
+                            attempt = 1;
+                            totalAttempts = 0;
+                        }
                     });
 
-                stages.push(stage);
+                    stages.push(stage);
+                    // Sort stages by year
+                    stages = _.sortBy(stages, function(s){ return s.year }).reverse();
+
                     if(stages.length == count)
                         callback(null, stages);
 
