@@ -393,6 +393,30 @@ exports.getFeedback = function(detail, user, callback) {
             callback(null, comment);
         });
     }
+    else if(detail.exid) {
+        getPage(user, 'https://ness.ncl.ac.uk/student/summary/feedback.php?exid=' + detail.exid, function(err, $)
+        {
+            if(err)
+            {
+                callback(err, null);
+                return;
+            }
+            var text = $('.leftc');
+
+            comment = {
+                title: $('h3').text().split('"')[1]
+            };
+
+            var individual = $(text[0]).html();
+            if(individual != 'None')
+                comment.individual = individual;
+            var general = $(text[1]).html();
+            if(general != 'None')
+                comment.general = general;
+
+            callback(null, comment);
+        });
+    }
 }
 
 exports.getName = function(user, callback)

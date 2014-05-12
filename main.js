@@ -82,7 +82,7 @@ var functions = {
             err ? printError(err) : printJson(modules);
         });
     },
-    feedback: function() {
+    personalFeedback: function() {
         ness.getFeedback({personal: 30487}, user, function(err, modules) {
             err ? printError(err) : printJson(modules);
         });
@@ -94,6 +94,11 @@ var functions = {
     },
     examFeedback: function() {
         ness.getFeedback({paperId: 156975, stid: 169676}, user, function(err, modules) {
+            err ? printError(err) : printJson(modules);
+        });
+    },
+    courseworkFeedback: function() {
+        ness.getFeedback({exid: 30487}, user, function(err, modules) {
             err ? printError(err) : printJson(modules);
         });
     },
