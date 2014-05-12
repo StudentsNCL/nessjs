@@ -541,7 +541,7 @@ function parseAttendance(attendanceDesc)
     if(attendanceDesc == "No Attendance Records" || attendanceDesc == "---")
         return {};
 
-    var attendance = attendanceDesc.match(/(\d+)% Attnd. \((\d+)\/(\d+)\)/);
+    var attendance = attendanceDesc.match(/(\d+).+\((\d+)\/(\d+)\)/);
     return {
         attendance: parseInt(attendance[1]),
         attended: parseInt(attendance[2]),
