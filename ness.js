@@ -336,7 +336,16 @@ exports.getStages = function(detail, user, callback)
                             current_module = {
                                 code: $($td[0]).text().trim(),
                                 credits: parseInt($($td[1]).text().trim()),
-                                year: $($td[2]).text().trim()
+                                year: $($td[2]).text().trim(),
+                                finalMark: $($td[5 - offset]).text().trim(),
+                                decision: $($td[6 - offset]).text().trim(),
+                            }
+                            // Check if there is attendence column
+                            if (($td.length + offset) === 9) {
+                                current_module.attendance = parseAttendance($($td[7 - offset]).text().trim())
+                            }
+                            else {
+                                current_module.attendance = null;
                             }
                         }
 
@@ -346,18 +355,11 @@ exports.getStages = function(detail, user, callback)
                             year: current_module.year,
                             attempt: $($td[3 - offset]).text().trim(),
                             attemptMark: $($td[4 - offset]).text().trim(),
-                            finalMark: $($td[5 - offset]).text().trim(),
-                            decision: $($td[6 - offset]).text().trim(),
+                            finalMark: current_module.finalMark,
+                            decision: current_module.decision,
+                            attendance: current_module.attendance,
                             id: $($td[$td.length - 1]).find('a').attr('href').split('componentid=')[1],
                         };
-
-                        // Check if there is attendence column
-                        if (($td.length + offset) === 9) {
-                            module.attendance = parseAttendance($($td[7 - offset]).text().trim())
-                        }
-                        else {
-                            module.attendance = null;
-                        }
 
                         stage.modules.push(module);
 
