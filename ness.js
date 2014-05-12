@@ -21,7 +21,7 @@ exports.getModules = function(detail, user, callback)
             }
 
             var modules = [];
-        
+
             var module = {};
             $('#mainbody dl').first().children().each(function(i)
             {
@@ -101,11 +101,11 @@ exports.getModules = function(detail, user, callback)
                     });
 
                     /* var moduleSummary = $(this).find('table:eq(1) tr:first'); */
-                    
+
                     modules.push(module);
                 }
             });
-            
+
             callback(null, modules);
         });
     }
@@ -131,7 +131,7 @@ exports.getModules = function(detail, user, callback)
                 };
 
                 _.extend(module, parseAttendance(attendanceDesc));
-                
+
                 modules.push(module);
             });
             callback(null, modules);
@@ -463,25 +463,34 @@ exports.getSpec = function(exid, user, callback)
 
 function getPage(user, url, callback)
 {
-    request({
-      uri: url,
-      auth: {
-        user: user.id, pass: user.pass,
-        sendImmediately: false
-      }
-    }, function (error, response, body)
-    {
-        if (!error && response.statusCode == 200)
+    if(user.dev) {
+        var fs = require('fs');
+        var filename = url.split('?')[0].substring(23).replace(/\//g, '-');
+        var file = fs.readFileSync('testHTML/' + filename, 'utf8');
+        var $ = cheerio.load(file);
+        callback(null, $);
+    }
+    else {
+        request({
+          uri: url,
+          auth: {
+            user: user.id, pass: user.pass,
+            sendImmediately: false
+          }
+        }, function (error, response, body)
         {
-            var $ = cheerio.load(body);
+            if (!error && response.statusCode == 200)
+            {
+                var $ = cheerio.load(body);
 
-            callback(null, $);
-        }
-        else
-        {
-            callback(error || {error: 401}, null);
-        }
-    });
+                callback(null, $);
+            }
+            else
+            {
+                callback(error || {error: 401}, null);
+            }
+        });
+    }
 }
 
 function parseAttendance(attendanceDesc)

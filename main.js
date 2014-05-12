@@ -114,18 +114,23 @@ if(argv.help || argv._[0] === undefined) {
     return;
 }
 
-if(argv.user === undefined) {
-    handleError("noUser", "Username required to login");
-    return;
-}
+//if developer mode
+if(argv.dev)
+    user.dev = argv.dev;
+else{
+    if(argv.user === undefined) {
+        handleError("noUser", "Username required to login");
+        return;
+    }
 
-if(argv.pass === undefined) {
-    handleError("noPass", "Password required to login");
-    return;
-}
+    if(argv.pass === undefined) {
+        handleError("noPass", "Password required to login");
+        return;
+    }
 
-user.id = argv.user;
-user.pass = argv.pass;
+    user.id = argv.user;
+    user.pass = argv.pass;
+}
 
 if(functions[argv._[0]] === undefined) {
     console.log("ness: '" + argv._[0] + "' is not a ness command. See 'main --help'.");
