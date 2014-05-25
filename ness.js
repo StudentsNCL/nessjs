@@ -238,7 +238,7 @@ exports.getStages = function(detail, user, callback)
 
                         //if there is a mark then parse it to get details
                         var mark = $(tds[1]).text().trim();
-                        if(mark != ''){
+                        if(mark != '' && mark != 'TBR'){
                             var marks = mark.match(/[\d\.]+/g);
                             coursework.mark = {
                                 percent: marks[0],
