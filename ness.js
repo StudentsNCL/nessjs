@@ -72,9 +72,9 @@ exports.getModules = function(detail, user, callback)
                         if(due != ''){
                             $(tds[1]).find('b').remove();
                             $(tds[1]).find('small').remove();
-                            var date = $(tds[1]).text().match(/\d+:\d+:\d+ \w+, \d+[a-z]{2} \w+ \d+/)[0];
-
-                            coursework.submitted = moment(date, 'HH:mm:ss DD MMM YYYY');
+                            var date = $(tds[1]).text().match(/\d+:\d+:\d+ \w+, \d+[a-z]{2} \w+ \d+/);
+                            if(date)
+                                coursework.submitted = moment(date[0], 'HH:mm:ss DD MMM YYYY');
                         }
 
                         //check if class shows coursework is late or has been given an extension
