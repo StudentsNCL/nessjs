@@ -518,22 +518,27 @@ exports.login = function(user, callback)
                 var action = $form.attr('action');
                 var response = $form.find('input[name=SAMLResponse]').attr('value');
                 request.post({url: action, jar: jar, form:{SAMLResponse: response}}, function (e, r, body) {
-                    var cookie = r.headers["set-cookie"][0];
-                    request.get({url: url, jar: jar}, function (error, response, body) {
-                        if (!e)
-                        {
-                            var $ = cheerio.load(body);
-                            var response = {
-                                name: $('#uname').text().trim().split(' (')[0],
-                                cookie: cookie
+                    if(e){
+                        callback(e || {error: 401}, null);
+                    }
+                    else{
+                        var cookie = r.headers["set-cookie"][0];
+                        request.get({url: url, jar: jar}, function (error, response, body) {
+                            if (!e)
+                            {
+                                var $ = cheerio.load(body);
+                                var response = {
+                                    name: $('#uname').text().trim().split(' (')[0],
+                                    cookie: cookie
+                                }
+                                callback(null, response);
                             }
-                            callback(null, response);
-                        }
-                        else
-                        {
-                            callback(e || {error: 401}, null);
-                        }
-                    });
+                            else
+                            {
+                                callback(e || {error: 401}, null);
+                            }
+                        });
+                    }
                 });
             });
         });
