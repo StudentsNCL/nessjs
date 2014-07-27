@@ -506,6 +506,40 @@ exports.getSpec = function(exid, user, callback)
         });
 }
 
+exports.login = function(user, callback)
+{
+    var jar = request.jar();
+    var url = "https://ness.ncl.ac.uk";
+    request.get({uri: url, jar: jar}, function(e, r, body) {
+        request.post({url: 'https://gateway.ncl.ac.uk/idp/Authn/UserPassword', jar: jar, form:{j_username: user.id, j_password: user.pass, _eventId: 'submit', submit: 'LOGIN'}}, function (e, r, body) {
+            request.get({url: url, jar: jar}, function (error, response, body) {
+                var $ = cheerio.load(body);
+                var $form = $('form');
+                var action = $form.attr('action');
+                var response = $form.find('input[name=SAMLResponse]').attr('value');
+                request.post({url: action, jar: jar, form:{SAMLResponse: response}}, function (e, r, body) {
+                    var cookie = r.headers["set-cookie"][0];
+                    request.get({url: url, jar: jar}, function (error, response, body) {
+                        if (!e)
+                        {
+                            var $ = cheerio.load(body);
+                            var response = {
+                                name: $('#uname').text().trim().split(' (')[0],
+                                cookie: cookie
+                            }
+                            callback(null, response);
+                        }
+                        else
+                        {
+                            callback(e || {error: 401}, null);
+                        }
+                    });
+                });
+            });
+        });
+    });
+}
+
 function getPage(user, url, callback)
 {
     if(user.dev) {
@@ -516,25 +550,29 @@ function getPage(user, url, callback)
         callback(null, $);
     }
     else {
-        request({
-          uri: url,
-          auth: {
-            user: user.id, pass: user.pass,
-            sendImmediately: false
-          }
-        }, function (error, response, body)
-        {
-            if (!error && response.statusCode == 200)
+        if(!user.cookie)
+            callback({error: 401}, null);
+        else {
+            var headers = {
+                'Cookie': user.cookie
+            };
+            request.get({
+              url: url,
+              headers: headers
+            }, function (error, response, body)
             {
-                var $ = cheerio.load(body);
+                if (!error && response.statusCode == 200)
+                {
+                    var $ = cheerio.load(body);
 
-                callback(null, $);
-            }
-            else
-            {
-                callback(error || {error: 401}, null);
-            }
-        });
+                    callback(null, $);
+                }
+                else
+                {
+                    callback(error || {error: 401}, null);
+                }
+            });
+        }
     }
 }
 

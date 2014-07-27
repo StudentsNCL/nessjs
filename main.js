@@ -106,8 +106,16 @@ var functions = {
         ness.getSpec('30489', user, function(err, modules) {
             err ? printError(err) : printJson(modules);
         });
+    },
+    login: function() {
+        ness.login(user, function(err, cookie) {
+            user.cookie = cookie;
+            ness.getStages({}, user, function(err, stages) {
+                err ? printError(err) : printJson(stages);
+            });
+        });
     }
-};
+}
 
 if(argv.help || argv._[0] === undefined) {
     showHelp();
