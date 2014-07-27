@@ -4,7 +4,6 @@ var request = require('request'),
     moment = require('moment'),
     errors = require('./errors'),
     _ = require('underscore');
-var request = request.defaults({jar: true});
 
 var name;
 
@@ -509,17 +508,18 @@ exports.getSpec = function(exid, user, callback)
 
 exports.login = function(user, callback)
 {
+    var jar = request.jar();
     var url = "https://ness.ncl.ac.uk";
-    request.get(url, function(e, r, body) {
-        request.post('https://gateway.ncl.ac.uk/idp/Authn/UserPassword', {form:{j_username: user.id, j_password: user.pass, _eventId: 'submit', submit: 'LOGIN'}}, function (e, r, body) {
-            request.get(url, function (error, response, body) {
+    request.get({uri: url, jar: jar}, function(e, r, body) {
+        request.post({url: 'https://gateway.ncl.ac.uk/idp/Authn/UserPassword', jar: jar, form:{j_username: user.id, j_password: user.pass, _eventId: 'submit', submit: 'LOGIN'}}, function (e, r, body) {
+            request.get({url: url, jar: jar}, function (error, response, body) {
                 var $ = cheerio.load(body);
                 var $form = $('form');
                 var action = $form.attr('action');
                 var response = $form.find('input[name=SAMLResponse]').attr('value');
-                request.post(action, {form:{SAMLResponse: response}}, function (e, r, body) {
+                request.post({url: action, jar: jar, form:{SAMLResponse: response}}, function (e, r, body) {
                     var cookie = r.headers["set-cookie"][0];
-                    request.get(url, function (error, response, body) {
+                    request.get({url: url, jar: jar}, function (error, response, body) {
                         if (!e)
                         {
                             var $ = cheerio.load(body);
