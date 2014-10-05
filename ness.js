@@ -55,7 +55,8 @@ exports.getModules = function(detail, user, callback)
                         else
                             courseworkLink = $(tds[0]).find('span');
 
-                        coursework.title = courseworkLink.text();
+                        if(courseworkLink.text() != "")
+                            coursework.title = courseworkLink.text();
 
                         if(courseworkLink.attr('title') !== undefined)
                             coursework.due = moment(courseworkLink.attr('title'), 'HH:mm:ss , D MMM YYYY');
@@ -97,7 +98,8 @@ exports.getModules = function(detail, user, callback)
                                 coursework.feedback = $(tds[3]).find('a').attr('href').match(/,\d+/)[0].substring(1);
                             }
                         }
-                        module.coursework.push(coursework);
+                        if(coursework.title)
+                            module.coursework.push(coursework);
                     });
 
                     /* var moduleSummary = $(this).find('table:eq(1) tr:first'); */
