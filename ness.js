@@ -3,7 +3,9 @@ var request = require('request'),
     cheerio = require('cheerio'),
     moment = require('moment'),
     errors = require('./errors'),
-    _ = require('underscore');
+    _ = require('underscore'),
+    fs = require('fs'),
+    FormData = require('form-data');
 
 var name;
 
@@ -28,11 +30,13 @@ exports.getModules = function(detail, user, callback)
                 var $this = $(this);
                 if(i % 2 == 0)
                 {
-                    module = {};
                     var moduleLink = $this.find('a').first();
-                    module.code = moduleLink.attr('title');
-                    module.title =  moduleLink.text().split(' - ')[1];
-                    module.coursework = [];
+                    module = {
+                        code: moduleLink.attr('title'),
+                        title: moduleLink.text().split(' - ')[1],
+                        coursework: []
+                    };
+                    module.did = $('#topmenu a:contains("' + module.code + '")').attr('href').match(/did=(\d+)/)[1];
                 }
                 else
                 {
@@ -55,8 +59,10 @@ exports.getModules = function(detail, user, callback)
                         else
                             courseworkLink = $(tds[0]).find('span');
 
-                        if(courseworkLink.text() != "")
+                        if(courseworkLink.text() != "") {
                             coursework.title = courseworkLink.text();
+                            coursework.safeTitle = makeSafe(coursework.title);
+                        }
 
                         if(courseworkLink.attr('title') !== undefined)
                             coursework.due = moment(courseworkLink.attr('title'), 'HH:mm:ss , D MMM YYYY');
@@ -508,6 +514,152 @@ exports.getSpec = function(exid, user, callback)
         });
 }
 
+exports.getSubmit = function(exid, user, callback)
+{
+    getPage(user, 'https://ness.ncl.ac.uk/php/submit.php?exid=' + exid, function(err, $)
+    {
+        if(err)
+        {
+            callback(err, null);
+            return;
+        }
+        if($('.error').length > 0) {
+            callback(null, {
+                error: $('.error').text(),
+                module: {
+                    title: $('#topmenu li.active').attr('title'),
+                    code: $('#topmenu li.active a').text()
+                },
+                coursework: $('#zcwk option[selected="selected"]').text()
+            });
+            return;
+        }
+        var mainbody = $('#mainbody');
+        var form = $('#sbmf');
+        var details = {
+            due: moment(mainbody.find('h3').text(), 'HH:mm:ss DD MMM YYYY'),
+            did: mainbody.find('input[name="did"]').val(),
+            exid: mainbody.find('input[name="exid"]').val(),
+            depid: mainbody.find('input[name="depid"]').val(),
+            uniq: mainbody.find('input[name="uniq"]').val(),
+            year: mainbody.find('input[name="year"]').val(),
+            files: form.find('input[type="file"]').length,
+            filesize: mainbody.find('input[name="MAX_FILE_SIZE"]').val(),
+            filetype: mainbody.find('p:not(.late):not(.warn)').eq(1).text().split(':')[1].trim(),
+            module: {
+                title: $('#topmenu li.active').attr('title'),
+                code: $('#topmenu li.active a').text()
+            },
+            coursework: $('#zcwk option[selected="selected"]').text()
+        };
+        if($('p.warn').length > 0) {
+            var submits = $('p.warn').text().match(/\d+/);
+            if(submits)
+                details.submits = submits[0];
+        }
+        callback(null, details);
+    });
+}
+
+exports.submit = function(details, user, callback)
+{
+    if(!user.cookie) {
+            callback({error: 401}, null);
+        }
+    else {
+        var formData = {
+            iid: '120',
+            instid: '1',
+            year: details.year,
+            llevel: '1',
+            did: details.did,
+            exid: details.exid,
+            depid: details.depid,
+            debug: '',
+            mask: '0',
+            mode: '7',
+            menu: '24',
+            MAX_FILE_SIZE: details.filesize,
+            uniq: details.uniq,
+            xsno: user.fullid,
+            grid: '',
+            email: details.email || ''
+          };
+        for(var i = 0; i < details.files.length; i++) {
+            formData['datafile[' + (i + 1) + ']'] = fs.createReadStream(details.dir + details.uniq + '/' + details.files[i]);
+        }
+
+        var headers = {
+            'Cookie': user.cookie
+        };
+        var form = new FormData();
+        for(var k in formData){
+            form.append(k, formData[k]);
+        }
+
+        form.submit({
+            port: 443,
+            protocol: 'https:',
+            host: 'ness.ncl.ac.uk',
+            path: '/php/coursework.php',
+            headers: headers
+        }, function(err, res){
+            // Delete files
+            for(var i = 0; i < details.files.length; i++) {
+                fs.unlinkSync(details.dir + details.uniq + '/' + details.files[i]);
+            }
+            fs.rmdir(details.dir + details.uniq);
+            if (err) {
+                callback(err, null);
+            }
+            else {
+                var body = '';
+                res.on('data', function(chunk) {
+                    body += chunk;
+                });
+                res.on('end', function() {
+                    var $ = cheerio.load(body);
+                    if($('.error').length > 0)
+                        callback(null, { error: $('.error').text().trim() });
+                    var result = {
+                        files: [],
+                        receipt: $('#mainbody p b').eq(1).text()
+                    }
+                    $('#mainbody table li').each(function() {
+                        var data = $(this).text().trim().split('<br>');
+                        var match = data[0].match(/([.]+) \(([.]+)\) - (\d+) /);
+
+                        var file = {
+                            name: match[0].trim(),
+                            type: match[1],
+                            size: match[2],
+                            checksum: data[1].split(':')[1].trim()
+                        }
+                        result.files.push(file);
+                    });
+                    callback(null, result);
+                });
+            }
+        });
+    }
+}
+
+exports.getExid = function(coursework, user, callback)
+{
+    var found = false;
+    getPage(user, 'https://ness.ncl.ac.uk/?did=' + coursework.did, function(err, $) {
+        $('#zcwk option').each(function() {
+            if(makeSafe($(this).text()) == coursework.name) {
+                var exid = $(this).val();
+                found = true;
+                callback(null, exid);
+            }
+        });
+        if(!found)
+            callback('No coursework found', null);
+    });
+}
+
 exports.login = function(user, callback)
 {
     var jar = request.jar();
@@ -531,6 +683,7 @@ exports.login = function(user, callback)
                                 var $ = cheerio.load(body);
                                 var response = {
                                     name: $('#uname').text().trim().split(' (')[0],
+                                    fullid: $('#uname').text().trim().split(' (')[1].slice(0,-1),
                                     cookie: cookie
                                 }
                                 callback(null, response);
@@ -594,6 +747,11 @@ function parseAttendance(attendanceDesc)
         attended: parseInt(attendance[2]),
         total: parseInt(attendance[3])
     };
+}
+
+function makeSafe(string)
+{
+    return string.replace(/[^a-zA-Z0-9]/g,'_');
 }
 
 
