@@ -623,11 +623,6 @@ exports.submit = function(details, user, callback)
             path: '/php/coursework.php',
             headers: headers
         }, function(err, res){
-            // Delete files
-            for(var i = 0; i < details.files.length; i++) {
-                fs.unlinkSync(details.dir + details.uniq + '/' + details.files[i]);
-            }
-            fs.rmdir(details.dir + details.uniq);
             if (err) {
                 callback(err, null);
             }
