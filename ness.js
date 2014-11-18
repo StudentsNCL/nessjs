@@ -626,13 +626,13 @@ exports.submit = function(details, user, callback)
                         receipt: $('#mainbody p b').eq(1).text()
                     }
                     $('#mainbody table li').each(function() {
-                        var data = $(this).text().trim().split('<br>');
-                        var match = data[0].match(/([.]+) \(([.]+)\) - (\d+) /);
+                        var data = $(this).html().trim().split('<br>');
+                        var match = data[0].match(/([^\(]+)\(([^\)]+)\) - ([\d]+)/);//match(/([.]+) \(([.]+)\) - (\d+) /);
 
                         var file = {
-                            name: match[0].trim(),
-                            type: match[1],
-                            size: match[2],
+                            name: match[1].trim(),
+                            type: match[2],
+                            size: match[3],
                             checksum: data[1].split(':')[1].trim()
                         }
                         result.files.push(file);
@@ -664,22 +664,33 @@ exports.login = function(user, callback)
 {
     var jar = request.jar();
     var url = "https://ness.ncl.ac.uk";
-    request.get({uri: url, jar: jar}, function(e, r, body) {
-        request.post({url: 'https://gateway.ncl.ac.uk/idp/Authn/UserPassword', jar: jar, form:{j_username: user.id, j_password: user.pass, _eventId: 'submit', submit: 'LOGIN'}}, function (e, r, body) {
+    request.get({uri: url, jar: jar}, function(error, response, body) {
+        if(error){
+            return callback(error || {error: 401}, null);
+        }
+        request.post({url: 'https://gateway.ncl.ac.uk/idp/Authn/UserPassword', jar: jar, form:{j_username: user.id, j_password: user.pass, _eventId: 'submit', submit: 'LOGIN'}}, function (error, response, body) {
+            if(error){
+                return callback(error || {error: 401}, null);
+            }
             request.get({url: url, jar: jar}, function (error, response, body) {
+                if(error){
+                    callback(error || {error: 401}, null);
+                }
                 var $ = cheerio.load(body);
                 var $form = $('form');
                 var action = $form.attr('action');
                 var response = $form.find('input[name=SAMLResponse]').attr('value');
-                request.post({url: action, jar: jar, form:{SAMLResponse: response}}, function (e, r, body) {
-                    if(e){
-                        callback(e || {error: 401}, null);
+                request.post({url: action, jar: jar, form:{SAMLResponse: response}}, function (error, response, body) {
+                    if(error){
+                        callback(error || {error: 401}, null);
                     }
                     else{
-                        var cookie = r.headers["set-cookie"][0];
+                        var cookie = response.headers["set-cookie"][0];
                         request.get({url: url, jar: jar}, function (error, response, body) {
-                            if (!e)
-                            {
+                            if(error){
+                                callback(error || {error: 401}, null);
+                            }
+                            else {
                                 var $ = cheerio.load(body);
                                 var response = {
                                     name: $('#uname').text().trim().split(' (')[0],
@@ -687,10 +698,6 @@ exports.login = function(user, callback)
                                     cookie: cookie
                                 }
                                 callback(null, response);
-                            }
-                            else
-                            {
-                                callback(e || {error: 401}, null);
                             }
                         });
                     }
