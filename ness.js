@@ -514,50 +514,69 @@ exports.getSpec = function(exid, user, callback)
         });
 }
 
-exports.getSubmit = function(exid, user, callback)
+exports.getSubmit = function(coursework, user, callback)
 {
-    getPage(user, 'https://ness.ncl.ac.uk/php/submit.php?exid=' + exid, function(err, $)
-    {
+    getPage(user, 'https://ness.ncl.ac.uk/?did=' + coursework.did, function(err, $) {
         if(err)
         {
             callback(err, null);
             return;
         }
-        if($('.error').length > 0) {
-            callback(null, {
-                error: $('.error').text(),
-                module: {
-                    title: $('#topmenu li.active').attr('title'),
-                    code: $('#topmenu li.active a').text()
-                },
-                coursework: $('#zcwk option[selected="selected"]').text()
-            });
-            return;
+        var found = false;
+        $('#zcwk option').each(function() {
+            // If this is the correct bit of coursework then use exid to get submission page
+            if(makeSafe($(this).text()) == coursework.name) {
+                found = true;
+                var exid = $(this).val();
+                getPage(user, 'https://ness.ncl.ac.uk/php/submit.php?exid=' + exid, function(err, $)
+                {
+                    if(err)
+                    {
+                        callback(err, null);
+                        return;
+                    }
+                    if($('.error').length > 0) {
+                        callback(null, {
+                            error: $('.error').text(),
+                            module: {
+                                title: $('#topmenu li.active').attr('title'),
+                                code: $('#topmenu li.active a').text()
+                            },
+                            coursework: $('#zcwk option[selected="selected"]').text()
+                        });
+                        return;
+                    }
+                    var mainbody = $('#mainbody');
+                    var form = $('#sbmf');
+                    var details = {
+                        due: moment(mainbody.find('h3').text(), 'HH:mm:ss DD MMM YYYY'),
+                        did: mainbody.find('input[name="did"]').val(),
+                        exid: mainbody.find('input[name="exid"]').val(),
+                        depid: mainbody.find('input[name="depid"]').val(),
+                        uniq: mainbody.find('input[name="uniq"]').val(),
+                        year: mainbody.find('input[name="year"]').val(),
+                        files: form.find('input[type="file"]').length,
+                        filesize: mainbody.find('input[name="MAX_FILE_SIZE"]').val(),
+                        filetype: mainbody.find('p:not(.late):not(.warn)').eq(1).text().split(':')[1].trim(),
+                        module: {
+                            title: $('#topmenu li.active').attr('title'),
+                            code: $('#topmenu li.active a').text()
+                        },
+                        coursework: $('#zcwk option[selected="selected"]').text()
+                    };
+                    if($('p.warn').length > 0) {
+                        var submits = $('p.warn').text().match(/\d+/);
+                        if(submits)
+                            details.submits = submits[0];
+                    }
+                    callback(null, details);
+                });
+            }
+        });
+        // No coursework found
+        if(!found){
+            callback('No coursework found', null);
         }
-        var mainbody = $('#mainbody');
-        var form = $('#sbmf');
-        var details = {
-            due: moment(mainbody.find('h3').text(), 'HH:mm:ss DD MMM YYYY'),
-            did: mainbody.find('input[name="did"]').val(),
-            exid: mainbody.find('input[name="exid"]').val(),
-            depid: mainbody.find('input[name="depid"]').val(),
-            uniq: mainbody.find('input[name="uniq"]').val(),
-            year: mainbody.find('input[name="year"]').val(),
-            files: form.find('input[type="file"]').length,
-            filesize: mainbody.find('input[name="MAX_FILE_SIZE"]').val(),
-            filetype: mainbody.find('p:not(.late):not(.warn)').eq(1).text().split(':')[1].trim(),
-            module: {
-                title: $('#topmenu li.active').attr('title'),
-                code: $('#topmenu li.active a').text()
-            },
-            coursework: $('#zcwk option[selected="selected"]').text()
-        };
-        if($('p.warn').length > 0) {
-            var submits = $('p.warn').text().match(/\d+/);
-            if(submits)
-                details.submits = submits[0];
-        }
-        callback(null, details);
     });
 }
 
@@ -642,22 +661,6 @@ exports.submit = function(details, user, callback)
             }
         });
     }
-}
-
-exports.getExid = function(coursework, user, callback)
-{
-    var found = false;
-    getPage(user, 'https://ness.ncl.ac.uk/?did=' + coursework.did, function(err, $) {
-        $('#zcwk option').each(function() {
-            if(makeSafe($(this).text()) == coursework.name) {
-                var exid = $(this).val();
-                found = true;
-                callback(null, exid);
-            }
-        });
-        if(!found)
-            callback('No coursework found', null);
-    });
 }
 
 exports.login = function(user, callback)
@@ -758,7 +761,12 @@ function parseAttendance(attendanceDesc)
 
 function makeSafe(string)
 {
-    return string.replace(/[^a-zA-Z0-9]/g,'_');
+    var result = string.replace(/[^a-zA-Z0-9]/g,'-');
+    // remove trailing dashes
+    while(result.substr(-1) == '-') {
+        result = result.substr(0, result.length - 1);
+    }
+    return result;
 }
 
 
