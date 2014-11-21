@@ -190,6 +190,11 @@ exports.getStages = function(detail, user, callback)
                     coursework: []
                 };
 
+                var moduleName = getModuleName(work.code, $);
+                    if (moduleName) {
+                        work.name = moduleName;
+                    }
+
                 //contains current coursework until we find next assessment group
                 var currentCoursework = {
                     coursework: []
@@ -368,6 +373,11 @@ exports.getStages = function(detail, user, callback)
                             attendance: current_module.attendance,
                             id: $($td[$td.length - 1]).find('a').attr('href').split('componentid=')[1],
                         };
+
+                        var moduleName = getModuleName(module.code, $);
+                        if (moduleName) {
+                            module.name = moduleName;
+                        }
 
                         stage.modules.push(module);
 
@@ -764,5 +774,14 @@ function makeSafe(string)
     return result;
 }
 
-
+function getModuleName(code, $)
+{
+    var result;
+    $('#topmenu li').each(function() {
+        if ($(this).find('a').text() === code) {
+            result = $(this).attr('title');
+        }
+    });
+    return result;
+}
 
