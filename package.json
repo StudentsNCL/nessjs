@@ -5,6 +5,7 @@
   "main": "ness.js",
   "dependencies": {
     "cheerio": "^0.15.0",
+    "depd": "^1.0.0",
     "form-data": "^0.1.4",
     "json-stringify-safe": "^5.0.0",
     "moment": "^2.6.0",

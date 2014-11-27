@@ -1,11 +1,12 @@
 
-var request = require('request'),
-    cheerio = require('cheerio'),
-    moment = require('moment'),
-    errors = require('./errors'),
-    _ = require('underscore'),
-    fs = require('fs'),
-    FormData = require('form-data');
+var request = require('request');
+var cheerio = require('cheerio');
+var moment = require('moment');
+var errors = require('./errors');
+var _ = require('underscore');
+var fs = require('fs');
+var FormData = require('form-data');
+var deprecate = require('depd')('nessjs');
 
 var name;
 
@@ -482,7 +483,7 @@ exports.getFeedback = function(detail, user, callback) {
     }
 }
 
-exports.getName = function(user, callback)
+exports.getUser = function(user, callback)
 {
   getPage(user, 'https://ness.ncl.ac.uk', function(err, $)
     {
@@ -491,9 +492,13 @@ exports.getName = function(user, callback)
             callback(err, null);
             return;
         }
-        var name = $('#uname').text().trim().split(' (')[0]
+        var u = $('#uname').text().trim().split(' (');
+        var user = {
+            id: u[1].slice(0,-1),
+            name: u[0]
+        };
 
-        callback(null, name);
+        callback(null, user);
     });
 }
 
@@ -736,7 +741,7 @@ function getPage(user, url, callback)
               headers: headers
             }, function (error, response, body)
             {
-                if (!error && response.statusCode == 200)
+                if (!error && response.statusCode == 200 && body != '')
                 {
                     var $ = cheerio.load(body);
 
@@ -785,3 +790,11 @@ function getModuleName(code, $)
     return result;
 }
 
+/********* Deprecated functions **************/
+
+exports.getName = deprecate.function(function(user, callback)
+{
+    exports.getUser(user, function(err, user){
+        callback(null, user.name);
+    });
+}, 'getName(user, callback): Use getUser(user, callback) instead');
