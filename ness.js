@@ -95,10 +95,16 @@ exports.getModules = function(detail, user, callback)
                         if(tds.length > 2){
                             //if just feedback or just general comments
                             if(tds.length == 3){
-                                if($(tds[2]).find('a').text() == 'General comments')
-                                    coursework.general = $(tds[2]).find('a').attr('href').match(/\d+/)[0];
-                                else
-                                    coursework.feedback = $(tds[2]).find('a').attr('href').match(/,\d+/)[0].substring(1);
+                                if($(tds[2]).find('a').text() == 'General comments') {
+                                    var f = $(tds[2]).find('a').attr('href');
+                                    if (f)
+                                      coursework.general = f.match(/\d+/)[0];
+                                  }
+                                else {
+                                    var f = $(tds[2]).find('a').attr('href');
+                                    if (f)
+                                      coursework.feedback = f.match(/,\d+/)[0].substring(1);
+                                  }
                             }
                             else{
                                 coursework.general = $(tds[2]).find('a').attr('href').match(/\d+/)[0];
@@ -416,8 +422,11 @@ exports.getFeedback = function(detail, user, callback) {
                 callback(err, null);
                 return;
             }
-            var text = $('.leftc');
+            var text = $('body');
             var marker = text.find('p.signature');
+            var title = $('h3').text().split('"')[1];
+
+            text.find('h3').remove();
             text.find('p.signature').remove();
             text.find('div').replaceWith(function() {
                 return $('<p></p>').append($(this).contents());
@@ -426,7 +435,7 @@ exports.getFeedback = function(detail, user, callback) {
             comment = {
                 comment: text.html(),
                 marker: marker.text(),
-                title: $('h3').text().split('"')[1]
+                title: title
             };
 
             callback(null, comment);
